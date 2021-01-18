@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { Client } from '../interfaces/client';
+import { ClientsService } from '../services/clients.service';
 
 @Component({
   selector: 'app-home',
@@ -6,10 +8,11 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit {
-
-  constructor() { }
+  clients:Client[]=[];
+  constructor(private clientService: ClientsService) { }
 
   ngOnInit(): void {
+    
   }
 
 }
