@@ -6,4 +6,6 @@ export interface Client {
     packets: number;
     BSSID: string;
     probes:string;
+    distance24:number;
+    distance5:number;
 }

@@ -5,8 +5,8 @@
       [opened]="(isHandset$ | async) === false">
     <mat-toolbar>Menu</mat-toolbar>
     <mat-nav-list>
-      <a mat-list-item href="#">Home</a>
-      <a mat-list-item href="#">Clients</a>
+      <a mat-list-item routerLink="home">Home</a>
+      <a mat-list-item routerLink="clients">Clients</a>
       <a mat-list-item href="#">Networks</a>
     </mat-nav-list>
   </mat-sidenav>
@@ -22,6 +22,6 @@
       </button>
       <span>WiFi-Tracker</span>
     </mat-toolbar>
-    <router-outlet></router-outlet>
+   <div class="container"> <router-outlet></router-outlet></div>
   </mat-sidenav-content>
 </mat-sidenav-container>
