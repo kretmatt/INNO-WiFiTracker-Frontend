@@ -14,10 +14,10 @@ export class ClientsComponent implements OnInit {
 
   ngOnInit(): void {
     this.clientService.getClients().subscribe(
-      data=>{
+      (data:any)=>{
         console.log(data);
-        var clientJSON = data.data.clients.filter(c=>!(c.MAC==="BSSID"||c.MAC===""||c.MAC==="Station MAC"));
-        clientJSON.forEach(c => {
+        var clientJSON = data.data.clients.filter((c:any)=>!(c.MAC==="BSSID"||c.MAC===""||c.MAC==="Station MAC"));
+        clientJSON.forEach((c:any) => {
           this.clients.push({
             MAC:c.MAC,
             power:+c.power,
