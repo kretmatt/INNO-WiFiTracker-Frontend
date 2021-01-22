@@ -14,11 +14,16 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { HomeComponent } from './home/home.component';
 import {HttpClientModule} from '@angular/common/http';
+import { ClientsComponent } from './clients/clients.component';
+import { ClientComponent } from './client/client.component';
+import {MatExpansionModule} from '@angular/material/expansion';
 @NgModule({
   declarations: [
     AppComponent,
     NavComponent,
-    HomeComponent
+    HomeComponent,
+    ClientsComponent,
+    ClientComponent
   ],
   imports: [
     BrowserModule,
@@ -31,7 +36,8 @@ import {HttpClientModule} from '@angular/common/http';
     MatIconModule,
     MatListModule,
     MatTabsModule,
-    HttpClientModule
+    HttpClientModule,
+    MatExpansionModule
   ],
   providers: [],
   bootstrap: [AppComponent]
