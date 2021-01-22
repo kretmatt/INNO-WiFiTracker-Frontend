@@ -15,7 +15,6 @@ export class ClientsComponent implements OnInit {
   ngOnInit(): void {
     this.clientService.getClients().subscribe(
       (data:any)=>{
-        console.log(data);
         var clientJSON = data.data.clients.filter((c:any)=>!(c.MAC==="BSSID"||c.MAC===""||c.MAC==="Station MAC"));
         clientJSON.forEach((c:any) => {
           this.clients.push({
@@ -33,7 +32,6 @@ export class ClientsComponent implements OnInit {
 
       }
     );
-    console.log(this.clients);
   }
 
   calculateDistance(powerLevel:number, frequency:number){

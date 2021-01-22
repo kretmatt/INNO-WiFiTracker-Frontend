@@ -17,13 +17,17 @@ import {HttpClientModule} from '@angular/common/http';
 import { ClientsComponent } from './clients/clients.component';
 import { ClientComponent } from './client/client.component';
 import {MatExpansionModule} from '@angular/material/expansion';
+import { NetworksComponent } from './networks/networks.component';
+import { NetworkComponent } from './network/network.component';
 @NgModule({
   declarations: [
     AppComponent,
     NavComponent,
     HomeComponent,
     ClientsComponent,
-    ClientComponent
+    ClientComponent,
+    NetworksComponent,
+    NetworkComponent
   ],
   imports: [
     BrowserModule,
