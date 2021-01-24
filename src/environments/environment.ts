@@ -3,7 +3,9 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+  requestIntervalTime:10000,
+  apiURL:'https://wifipersontracker.herokuapp.com'
 };
 
 /*

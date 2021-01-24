@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { Observable, Subscription,interval } from 'rxjs';
+import { environment } from 'src/environments/environment';
 import { Network } from '../interfaces/network';
 import { NetworksService } from '../services/networks.service';
 
@@ -8,13 +10,26 @@ import { NetworksService } from '../services/networks.service';
   styleUrls: ['./networks.component.scss']
 })
 export class NetworksComponent implements OnInit {
+  timeOfScan:Date=new Date();
   networks:Network[]=[];
+  subscription:Subscription=new Subscription();
   constructor(private networksService:NetworksService) { }
 
   ngOnInit(): void {
+   this.receiveData();
+   this.subscription = interval(environment.requestIntervalTime).subscribe(()=>this.receiveData());
+  }
+
+  ngOnDestroy():void{
+    this.subscription.unsubscribe();
+  }
+
+  receiveData(){
     this.networksService.getNetworks().subscribe(
       (data:any)=>{
+        this.timeOfScan=new Date(data.timeOfScan);
         var networkJSON = data.data.networks.filter((n:any)=>!(n.BSSID==="BSSID"||n.BSSID===""||n.BSSID==="Station MAC"));
+        this.networks=[];
         networkJSON.forEach((n:any) => {
           this.networks.push({
             BSSID:n.BSSID,
