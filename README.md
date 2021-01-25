@@ -2,16 +2,17 @@
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 11.0.5.
 
+This project is a standalone frontend, which obtains data from the backend of the WiFi-PersonTracker project. The repository of the backend can be found at [Taha-cmd/WifiPersonTracker](https://github.com/Taha-cmd/WifiPersonTracker).
 
 ## Installation
 
-In order to run the frontend of the WiFi-Tracker project, git and nodejs are needed. The following steps need to be executed:
+In order to run the frontend of the WiFi-PersonTracker project, git and nodejs are needed. The following steps need to be executed:
 
 1. Downloading the source code: The source code can easily be downloaded using `git clone https://github.com/kretmatt/INNO-WiFiTracker-Frontend.git`. There are several branches for different features. The current version of the project is on the **dev**-Branch. In order to switch branches, the command `git checkout dev` needs to be executed.
 
 2. Installing dependencies: The dependencies of the project are contained within the **package.json** file. No changes are needed. `npm install` analyzes the **package.json** file and downloads the necessary dependencies needed for the frontend.
 
-3. Starting the application: After downloading the dependencies, the angular project can be started using `ng serve`. The default address to access the project is `http://localhost:4200/`.
+3. Starting the application: After downloading the dependencies, the angular project can be started on a dev server using `ng serve`. The default address to access the project is `http://localhost:4200/`.
 
 ## Angular
 
