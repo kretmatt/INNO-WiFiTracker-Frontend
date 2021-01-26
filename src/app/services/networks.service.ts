@@ -10,6 +10,6 @@ export class NetworksService {
 
   constructor(private http: HttpClient) { }
   getNetworks(){
-    return this.http.get(environment.apiURL+"/test/networks");
+    return this.http.get(environment.apiURL+"/data/networks");
   }
 }
