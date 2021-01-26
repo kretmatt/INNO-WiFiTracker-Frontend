@@ -1,0 +1,5 @@
+<h2>Time of scan: {{timeOfScan}}</h2>
+<mat-accordion>
+    <app-client *ngFor="let client of clients; let i=index" [client]="client">
+    </app-client>
+</mat-accordion>

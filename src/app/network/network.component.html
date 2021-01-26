@@ -1,0 +1,61 @@
+<mat-expansion-panel>
+    <mat-expansion-panel-header>
+        <mat-panel-title>
+          {{network.BSSID}}
+        </mat-panel-title>
+    </mat-expansion-panel-header>
+    <div class="networkdetail">
+        <mat-icon aria-hidden="false" aria-label="Network first time seen to last time seen" class="align-contents">access_time</mat-icon>
+        <strong> Aufgespürt von-bis: </strong>{{network.firstTimeSeen}} - {{network.lastTimeSeen}}
+      </div>
+    <mat-divider></mat-divider>
+    <div class="networkdetail">
+        <mat-icon aria-hidden="false" aria-label="Network speed" class="align-contents">speed</mat-icon>
+        <strong> Speed: </strong>{{network.speed}}
+      </div>
+    <mat-divider></mat-divider> 
+    <div class="networkdetail">
+        <mat-icon aria-hidden="false" aria-label="Network channel" class="align-contents">connected_tv</mat-icon>
+        <strong> Channel: </strong>{{network.channel}}
+      </div>
+    <mat-divider></mat-divider> 
+    <div class="networkdetail">
+        <mat-icon aria-hidden="false" aria-label="Network privacy" class="align-contents">privacy_tip</mat-icon>
+        <strong> Privacy: </strong>{{network.privacy}}
+      </div>
+    <mat-divider></mat-divider> 
+    <div class="networkdetail">
+        <mat-icon aria-hidden="false" aria-label="Network cipher" class="align-contents">enhanced_encryption</mat-icon>
+        <strong> Cipher: </strong>{{network.cipher}}
+      </div>
+    <mat-divider></mat-divider> 
+    <div class="networkdetail">
+        <mat-icon aria-hidden="false" aria-label="Network authentication" class="align-contents">login</mat-icon>
+        <strong> Authentication: </strong>{{network.authentication}}
+      </div>
+    <mat-divider></mat-divider> 
+    <div class="networkdetail">
+        <mat-icon aria-hidden="false" aria-label="Network power" class="align-contents">signal_cellular_alt</mat-icon>
+        <strong> Power: </strong>{{network.power}}
+      </div>
+    <mat-divider></mat-divider> 
+    <div class="networkdetail">
+        <mat-icon aria-hidden="false" aria-label="Network beacons" class="align-contents">rss_feed</mat-icon>
+        <strong> Beacons: </strong>{{network.beacons}}
+      </div>
+    <mat-divider></mat-divider> 
+    <div class="networkdetail">
+        <mat-icon aria-hidden="false" aria-label="Network iv count" class="align-contents">network_cell</mat-icon>
+        <strong> IV: </strong>{{network.iv}}
+      </div>
+    <mat-divider></mat-divider> 
+    <div class="networkdetail">
+        <mat-icon aria-hidden="false" aria-label="Network ip count" class="align-contents">network_wifi</mat-icon>
+        <strong> IP: </strong>{{network.ip}}
+      </div>
+    <mat-divider></mat-divider> 
+    <div class="networkdetail">
+        <mat-icon aria-hidden="false" aria-label="Network essid" class="align-contents">router</mat-icon>
+        <strong> ESSID: </strong>{{network.essid}}
+      </div>
+</mat-expansion-panel>

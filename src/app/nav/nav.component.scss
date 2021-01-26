@@ -1,0 +1,40 @@
+.sidenav-container {
+  height: 100%;
+}
+
+.sidenav {
+  width: 200px;
+}
+
+.sidenav .mat-toolbar {
+  background: inherit;
+}
+
+.mat-toolbar.mat-primary {
+  position: sticky;
+  top: 0;
+  z-index: 9;
+}
+
+.mat-list-item::before{
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 4px;
+  background-color: #3f51b5;
+  opacity: 0;
+  transform: scaleY(0);
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.mat-list-item:hover::before{
+    opacity: 0.5;
+    transform: scaleY(0.66) scaleX(1.15);
+}
+
+.mat-list-item.is-active::before{
+  opacity: 1;
+  transform: scaleY(1);
+}
