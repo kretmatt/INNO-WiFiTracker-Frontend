@@ -10,6 +10,6 @@ import { environment } from 'src/environments/environment';
 export class ClientsService {
   constructor(private http: HttpClient) { }
   getClients(){
-    return this.http.get(environment.apiURL+'/data/clients');
+    return this.http.get(environment.apiURL+'/test/clients');
   }
 }
