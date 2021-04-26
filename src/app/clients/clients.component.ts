@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { MatTab } from '@angular/material/tabs';
 import { interval, Subscription } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { Client } from '../interfaces/client';
@@ -16,7 +15,6 @@ export class ClientsComponent implements OnInit {
   clients:Client[]=[];
   subscription:Subscription=new Subscription();
   svg:any;
-  g:any;
   tooltip:any;
   margin:number=50;
   width:number=750;
@@ -25,20 +23,20 @@ export class ClientsComponent implements OnInit {
   constructor(private clientService: ClientsService) { }
 
   ngOnInit(): void {
+    this.initDiagram();
     this.receiveData();
-    this.createSVG();
     this.subscription = interval(environment.requestIntervalTime).subscribe(()=>this.receiveData());
   }
 
   ngOnDestroy():void{
     this.subscription.unsubscribe();
   }
-
+  /*
   calculateDistance(powerLevel:number, frequency:number){
     var exponent = (27.55-(20*Math.log10(frequency))+Math.abs(powerLevel))/20;
     return Math.pow(10,exponent);
   }
-
+  */
   receiveData(){
     this.clientService.getClients().subscribe(
       (data:any)=>{
@@ -54,8 +52,8 @@ export class ClientsComponent implements OnInit {
             packets:+c.packets,
             BSSID:c.BSSID,
             probes:c.probes,
-            distance24:this.calculateDistance(+c.power,2400),
-            distance5:this.calculateDistance(+c.power,5000)
+            distance24:c.distance_2_4ghz,
+            distance5:c.distance_5ghz
           });
         });
         this.drawDistances(this.clients);
@@ -63,49 +61,69 @@ export class ClientsComponent implements OnInit {
     );
   }
 
-  createSVG():void{
+  initDiagram():void{
+    //Initialise the svg element inside the fiure tag with the id distance
     this.svg = d3.select("figure#distance")
       .append("svg")
-      .attr("width", this.width + (this.margin * 2))
-      .attr("height", this.height + (this.margin * 2))
+      .attr("preserveAspectRatio", "xMinYMin meet")
+      .attr("viewBox", "0 0 960 500")
+      .append("g");
+    //Enable zoom functionality
+    var svgcontainer = this.svg;
+    svgcontainer.call(d3.zoom().on('zoom',function(e:any){
+      svgcontainer.attr("transform",e.transform)
+    }));
+    //Initially set tooltip opacity to 0
     this.tooltip = d3.select("#tooltip")	
       .style("opacity", 0);
   }
 
   drawDistances(data:Client[]):void{
+    //Sort clients by distance (descending)
     data.sort((a:Client,b:Client)=>b.distance24-a.distance24);
+    //Create new variable called circles. It is a selection of all circle elements inside the svg. Set data context to the new client-dataset from the server 
     var circles=this.svg.selectAll("circle").data(data, function(c:Client){return c.MAC;});
+    //Create variable which references the tooltip instance of the component. Is needed for events such as mousemove and mouseout (context changes and therefore this.tooltip cannot be used)
     var tt = this.tooltip;
-    //fade out existing circles and remove previous data
-    circles.exit().transition("time")
-    .duration(500)
-    .attr("r", 0)
-    .attr("stroke-opacity",0)
-    .remove();
-    
-    //fade in new circles bound to data
+    var margin = this.margin;
+    //Create new circles
     circles.enter().append("circle")
-    .attr("cx", (this.width+this.margin*2)/2)
-    .attr("cy",(this.height+this.margin*2)/2)
+    .attr("cx", (this.width+2*this.margin)/2)
+    .attr("cy",(this.height+2*this.margin)/2)
     .attr("r", 0)
     .attr('stroke', function(){
-      return environment.bluepalette[Math.floor(Math.random()*environment.bluepalette.length)]
+      return environment.palette[Math.floor(Math.random()*environment.palette.length)]
     })
     .attr('stroke-width',2)
     .attr('fill','transparent')
     .attr("stroke-opacity",0)
     .on("mousemove", function(e:any,c:Client){
-      tt.style('transform', `translate(${e.layerX}px, ${e.layerY-635}px)`)
+      //Increase stroke width and show tooltip
+      d3.select(e.originalTarget).style('stroke-width',4);
+      tt.style('transform', `translate(${e.layerX}px, ${(e.layerY-2*margin)}px)`)
       .style('opacity', 1).style('background-color','#3f51b5').html(c.MAC+"<br>"+c.distance24+" m")
     })
+    //Update radius of circles and fade in new rings
     .on("mouseout",function(e:any){
+      //Decrease stroke width and hide tooltip
+      d3.select(e.originalTarget).style('stroke-width',2);
       tt.style('opacity',0);
     })
+    //
     .merge(circles).transition("time")
       .duration(500)
-      .attr("r", (d:Client)=>(d.distance24*2+(Math.random()*10)))
+      .attr("r", (d:Client)=>(d.distance24*2))
       .attr("stroke-opacity",1);
+    
 
+    circles.sort((a:Client,b:Client)=>b.distance24-a.distance24);
 
+    //fade out existing circles and remove previous data
+      circles.exit().transition("time")
+      .duration(500)
+      .attr("r", 0)
+      .attr("stroke-opacity",0)
+      .remove();
+      
   }
 }

@@ -19,6 +19,7 @@ import { ClientComponent } from './client/client.component';
 import {MatExpansionModule} from '@angular/material/expansion';
 import { NetworksComponent } from './networks/networks.component';
 import { NetworkComponent } from './network/network.component';
+import {MatGridListModule} from '@angular/material/grid-list'; 
 @NgModule({
   declarations: [
     AppComponent,
@@ -41,7 +42,8 @@ import { NetworkComponent } from './network/network.component';
     MatListModule,
     MatTabsModule,
     HttpClientModule,
-    MatExpansionModule
+    MatExpansionModule,
+    MatGridListModule
   ],
   providers: [],
   bootstrap: [AppComponent]

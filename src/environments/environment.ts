@@ -6,13 +6,11 @@ export const environment = {
   production: false,
   requestIntervalTime:10000,
   apiURL:'https://wifipersontracker.herokuapp.com',
-  bluepalette:[
-    '#3FE0D0', '#B0DFE5', '#95C8D8', '#7EF9FF', 
-    '#588BAE', '#89CFF0', '#81D8D0', '#4682B4',
-    '#57A0D3', '#4F97A3', '#7285A5', '#73C2FB',
-    '#008081', '#4C516D', '#6593F5', '#008ECC',
-    '#0F52BA', '#0080FF', '#1034A6', '#0E4D92',
-    '#000080', '#003152', '#1D2951', '#111E6C'
+  palette:[
+    '#003bdb', '#831aca', '#b800b2', '#dc0095',
+    '#f40074', '#ff0055', '#ff0033', '#ff3900',
+    '#7cdb00', '#00c695', '#00a3ff', '#0069ff',
+    '#00d453', '#00b6d9', '#008cff', '#001cff'
   ]
 };
 
