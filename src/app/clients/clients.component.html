@@ -1,7 +1,22 @@
 <h2>Time of scan: {{timeOfScan}}</h2>
 <div id="tooltip"></div>
-<figure id="distance"></figure>
-<mat-accordion>
-    <app-client *ngFor="let client of clients; let i=index" [client]="client">
-    </app-client>
-</mat-accordion>
+<div class="container">
+    <div class="diagrams" id="diagrams">
+        <h2>Current distances</h2>
+        <mat-divider></mat-divider>
+        <figure id="distance"></figure>
+        <h2>Distance history</h2>
+        <mat-divider></mat-divider>
+        <figure id ="distancehistory"></figure>
+    </div>
+    <div class="clients">
+        <mat-accordion>
+            <app-client *ngFor="let client of clients; let i=index" [client]="client">
+            </app-client>
+        </mat-accordion>
+    </div>
+</div>
+
+
+
+

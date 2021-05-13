@@ -8,4 +8,5 @@ export interface Client {
     probes:string;
     distance24:number;
     distance5:number;
+    timeOfScan:Date;
 }
