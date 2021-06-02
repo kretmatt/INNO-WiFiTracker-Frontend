@@ -10,9 +10,28 @@
         <figure id ="distancehistory"></figure>
     </div>
     <div class="clients">
+        <h2>Current clients</h2>
+        <mat-divider></mat-divider>
         <mat-accordion>
             <app-client *ngFor="let client of clients; let i=index" [client]="client">
             </app-client>
+        </mat-accordion>
+        <h2 style="margin-top: 16px;">Client distance histories
+            <button mat-raised-button color="primary" class="clearbutton" (click)="clearSelection()">Clear selection</button>
+
+        </h2>
+        <mat-accordion>
+            <mat-expansion-panel *ngFor="let item of clientHistoryGroupedByMac | keyvalue">
+                <mat-expansion-panel-header>
+                    <mat-panel-title [ngStyle]="{'color':(selectedClients.indexOf(item.key)!==-1)?diagramColor(item.key):'#000000'}">
+                      {{item.key}}
+                    </mat-panel-title>
+                </mat-expansion-panel-header>
+                <div *ngFor="let value of item.value" class="clientdistance">
+                    <p><b>{{value.timeOfScan}}:</b> {{value.distance24}} m</p>
+                    <mat-divider></mat-divider>
+                </div>              
+            </mat-expansion-panel>
         </mat-accordion>
     </div>
 </div>

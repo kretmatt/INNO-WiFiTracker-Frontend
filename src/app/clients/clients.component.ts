@@ -29,6 +29,8 @@ export class ClientsComponent implements AfterContentInit {
   margin:number=50;
   width:number=750;
   height:number=400;
+  clientHistoryGroupedByMac: [] = [];
+  selectedClients: string[]=[];
 
   constructor(private clientService: ClientsService) { }
 
@@ -83,10 +85,9 @@ export class ClientsComponent implements AfterContentInit {
           });
         });
         this.drawDistances(this.clients);
-        console.log(this.clientHistory);
         this.clientHistory=this.clientHistory.filter(c=>c.timeOfScan.getTime()>new Date(Date.now()-2000*60).getTime());
-        console.log(this.clientHistory);
         this.drawDistanceHistory(this.clientHistory);
+        this.clientHistoryGroupedByMac = this.groupByType(this.clientHistory);
       }
     );
   }
@@ -165,6 +166,16 @@ export class ClientsComponent implements AfterContentInit {
       //Decrease stroke width and hide tooltip
       d3.select(e.originalTarget).style('stroke-width',4);
       this.tooltip.style('opacity',0);
+    }).
+    on("click", (e:any, c:any)=>{
+      if(this.selectedClients.indexOf(c.key)===-1)
+      {
+        this.selectedClients.push(c.key);
+      }else{
+        let index = this.selectedClients.indexOf(c.key);
+        this.selectedClients.splice(index,1);
+      }
+      console.log(this.selectedClients)
     });
     //remove obsolete data
     lines.exit().remove();
@@ -210,6 +221,16 @@ export class ClientsComponent implements AfterContentInit {
       //Decrease stroke width and hide tooltip
       d3.select(e.originalTarget).style('stroke-width',2);
       tt.style('opacity',0);
+    }).
+    on("click", (e:any, c:Client)=>{
+      if(this.selectedClients.indexOf(c.MAC)===-1)
+      {
+        this.selectedClients.push(c.MAC);
+      }else{
+        let index = this.selectedClients.indexOf(c.MAC);
+        this.selectedClients.splice(index,1);
+      }
+      console.log(this.selectedClients)
     })
     //
     .merge(circles).transition("time")
@@ -246,5 +267,17 @@ export class ClientsComponent implements AfterContentInit {
       this.diagramColors.push(clientColor);
     }
     return color;
+  }
+
+  groupByType(array:Client[]){
+    return array.reduce((r,a)=>{
+      r[a.MAC] = r[a.MAC] || [];
+      r[a.MAC].push(a);
+      return r;
+    }, Object.create(null));
+  }
+
+  clearSelection(){
+    this.selectedClients = [];
   }
 }
