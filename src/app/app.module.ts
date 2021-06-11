@@ -19,7 +19,9 @@ import { ClientComponent } from './client/client.component';
 import {MatExpansionModule} from '@angular/material/expansion';
 import { NetworksComponent } from './networks/networks.component';
 import { NetworkComponent } from './network/network.component';
-import {MatGridListModule} from '@angular/material/grid-list'; 
+import {MatGridListModule} from '@angular/material/grid-list';
+import { ModalComponent } from './modal/modal.component';
+import { ClientstatsComponent } from './clientstats/clientstats.component'; 
 @NgModule({
   declarations: [
     AppComponent,
@@ -28,7 +30,9 @@ import {MatGridListModule} from '@angular/material/grid-list';
     ClientsComponent,
     ClientComponent,
     NetworksComponent,
-    NetworkComponent
+    NetworkComponent,
+    ModalComponent,
+    ClientstatsComponent
   ],
   imports: [
     BrowserModule,

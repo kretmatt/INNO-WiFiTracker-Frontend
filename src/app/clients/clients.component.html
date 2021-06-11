@@ -26,16 +26,17 @@
                     <mat-panel-title [ngStyle]="{'color':(selectedClients.indexOf(item.key)!==-1)?diagramColor(item.key):'#000000'}">
                       {{item.key}}
                     </mat-panel-title>
+                    <button mat-raised-button color="primary" class="detailbtn" (click)="selectClientHistory(item,'test')">Details</button>
                 </mat-expansion-panel-header>
                 <div *ngFor="let value of item.value" class="clientdistance">
-                    <p><b>{{value.timeOfScan}}:</b> {{value.distance24}} m</p>
                     <mat-divider></mat-divider>
+                    <p><b>{{value.timeOfScan}}:</b> {{value.distance24}} m</p>
                 </div>              
             </mat-expansion-panel>
         </mat-accordion>
     </div>
 </div>
-
-
-
-
+<wt-modal id="test">
+    <app-clientstats [clientHistory]="selectedClientHistory"></app-clientstats>
+    <button (click)="closeModal('test');">Close</button>
+</wt-modal>

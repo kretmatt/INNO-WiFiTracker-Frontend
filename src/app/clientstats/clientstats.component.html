@@ -1,4 +1,4 @@
-<h1>Client stats</h1>
+<h1>{{clientHistory.key}}</h1>
 <mat-grid-list cols="{{maxCols}}" rowHeight="500px" (window:resize)="onResize($event)">
     <mat-grid-tile [colspan]="cols(4)" [rowspan]="rows(1)">
         <div class="gridcontent">
@@ -6,15 +6,41 @@
                 Distance line diagram
             </h1>
             <mat-divider></mat-divider>
-            <figure id="distancehistory"></figure>
+            <figure id="distancehistory" class="diagramFigure"></figure>
         </div>
     </mat-grid-tile>
     <mat-grid-tile [colspan]="cols(1)" [rowspan]="rows(2)">
         <div class="gridcontent">
             <h1>
-                Distances text
+                Client stats
             </h1>
             <mat-divider></mat-divider>
+            <div *ngIf="clientHistory.value.length>2; else defaultContent">
+                <p>Scanned count: {{scannedCount}}</p>
+                <p>Distance deviation (start/finish): {{distanceDeviation}} m</p>
+                <p>Average speed: {{averageSpeed}} m/s</p>
+                <p>Distance covered: {{coveredDistance}} m</p>
+                <p>Average distance: {{averageDistance}} m</p>
+                <p>Overall trend: {{overallTrend}}</p>
+            </div>
+            
+            <ng-template #defaultContent>
+                Client stats can't be calculated, because there are still not enough data points for analysis.
+            </ng-template>
+        </div>
+    </mat-grid-tile>
+    <mat-grid-tile [colspan]="cols(2)" [rowspan]="rows(1)">
+        <div class="gridcontent">
+            <div>
+                <h1>
+                    Ring distance history   
+                    <button mat-raised-button color="primary" (click)="animateRing()">Replay</button>
+ 
+                </h1>
+
+            </div>
+            <mat-divider></mat-divider>
+            <figure id="distancerings" class="diagramFigure"></figure>
         </div>
     </mat-grid-tile>
     <mat-grid-tile [colspan]="cols(2)" [rowspan]="rows(1)">
@@ -23,16 +49,7 @@
                 Average speed history
             </h1>
             <mat-divider></mat-divider>
-            <figure id="distancerings"></figure>
-        </div>
-    </mat-grid-tile>
-    <mat-grid-tile [colspan]="cols(2)" [rowspan]="rows(1)">
-        <div class="gridcontent">
-            <h1>
-                Rings? diagram
-            </h1>
-            <mat-divider></mat-divider>
-            <figure id="speedhistory"></figure>
+            <figure id="speedhistory" class="diagramFigure"></figure>
         </div>
     </mat-grid-tile>
 </mat-grid-list>

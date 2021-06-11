@@ -1,8 +1,13 @@
 <h1 class="mat-display-3" layout-align="center">Innolab - WifiTracker</h1>
 <mat-divider></mat-divider>
+
 <mat-tab-group mat-stretch-tabs>
     <mat-tab label="Clients">
-        <app-clients></app-clients>
+        <h2>Time of scan: {{timeOfScan}}</h2>
+        <mat-accordion>
+            <app-client *ngFor="let client of clients; let i=index" [client]="client">
+            </app-client>
+        </mat-accordion>
     </mat-tab>
     <mat-tab label="Networks">
         <app-networks></app-networks>

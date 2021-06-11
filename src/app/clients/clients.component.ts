@@ -7,6 +7,8 @@ import * as d3 from 'd3';
 import * as d3Collection from 'd3-collection';
 import { XhrFactory } from '@angular/common/http';
 import { timeout } from 'rxjs/operators';
+import { ModalService } from '../services/modal.service';
+import { ClientHistory } from '../interfaces/client-history';
 
 @Component({
   selector: 'app-clients',
@@ -23,7 +25,9 @@ export class ClientsComponent implements AfterContentInit {
   msvg:any;
   x:any;
   y:any;
+  x2:any;
   xAxis:any;
+  x2Axis:any;
   yAxis:any;
   tooltip:any;
   margin:number=50;
@@ -31,8 +35,15 @@ export class ClientsComponent implements AfterContentInit {
   height:number=400;
   clientHistoryGroupedByMac: [] = [];
   selectedClients: string[]=[];
+  selectedClientHistory:ClientHistory;
 
-  constructor(private clientService: ClientsService) { }
+  constructor(private clientService: ClientsService, private modalService:ModalService) {
+    this.selectedClientHistory = {
+      key:"",
+      value:[],
+      color:"#FFF"
+    };
+   }
 
   ngAfterContentInit(): void {
     setTimeout(()=>{
@@ -67,7 +78,7 @@ export class ClientsComponent implements AfterContentInit {
             packets:+c.packets,
             BSSID:c.BSSID,
             probes:c.probes,
-            distance24:c.distance_2_4ghz,
+            distance24:c.distance_2_4ghz+Math.random()*10,
             distance5:c.distance_5ghz,
             timeOfScan:new Date(data.timeOfScan)
           });
@@ -79,7 +90,7 @@ export class ClientsComponent implements AfterContentInit {
             packets:+c.packets,
             BSSID:c.BSSID,
             probes:c.probes,
-            distance24:c.distance_2_4ghz,
+            distance24:c.distance_2_4ghz+Math.random()*10,
             distance5:c.distance_5ghz,
             timeOfScan:new Date(data.timeOfScan)
           });
@@ -97,8 +108,10 @@ export class ClientsComponent implements AfterContentInit {
     this.svg = d3.select("figure#distance")
       .append("svg")
       .attr("preserveAspectRatio", "xMinYMin meet")
-      .attr("viewBox", "0 0 "+this.width+" "+this.height)
+      .attr("viewBox", "0 0 "+this.width+" "+this.width)
       .append("g");
+    this.x2 = d3.scaleLinear().domain([0,50]).range([0,(this.width/2)-10]);
+    this.x2Axis = this.svg.append("g").attr("transform","translate("+this.width/2+","+this.width/2+")").call(d3.axisBottom(this.x2));
     //Enable zoom functionality
     var svgcontainer = this.svg;
     svgcontainer.call(d3.zoom().on('zoom',function(e:any){
@@ -199,10 +212,18 @@ export class ClientsComponent implements AfterContentInit {
     //Create variable which references the tooltip instance of the component. Is needed for events such as mousemove and mouseout (context changes and therefore this.tooltip cannot be used)
     var tt = this.tooltip;
     var margin = this.margin;
+
+    var maxdistance = data.reduce((a:Client,b:Client)=>{
+      return a.distance24>b.distance24?a:b
+    }).distance24;
+
+    this.x2.domain([0,maxdistance]);
+    this.x2Axis.transition().duration(1000).call(d3.axisBottom(this.x2));
+
     //Create new circles
     circles.enter().append("circle")
     .attr("cx", (this.width)/2)
-    .attr("cy",(this.height)/2)
+    .attr("cy",(this.width)/2)
     .attr("r", 0)
     .attr('stroke', (c:Client)=>{
       return this.diagramColor(c.MAC);
@@ -235,7 +256,7 @@ export class ClientsComponent implements AfterContentInit {
     //
     .merge(circles).transition("time")
       .duration(500)
-      .attr("r", (d:Client)=>(d.distance24*10))
+      .attr("r", (d:Client)=>(this.x2(d.distance24)))
       .attr("stroke-opacity",1);
     
 
@@ -279,5 +300,22 @@ export class ClientsComponent implements AfterContentInit {
 
   clearSelection(){
     this.selectedClients = [];
+  }
+
+  selectClientHistory(sch:any, id:string){
+    console.log(sch);
+    this.selectedClientHistory={
+      key:sch.key,
+      value:sch.value,
+      color:this.diagramColor(sch.key)
+    };
+    this.openModal(id);
+  }
+  openModal(id: string) {
+    this.modalService.open(id);
+  }
+
+  closeModal(id: string) {
+      this.modalService.close(id);
   }
 }

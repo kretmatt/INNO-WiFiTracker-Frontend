@@ -1,5 +1,5 @@
 .mat-grid-tile{
-    background-color: lightblue;
+    border: black 1px;
     justify-content: flex-start !important;
 }
 .gridcontent{
@@ -8,4 +8,14 @@
     right: 5px;
     top: 5px;
     bottom: 5px;
+    display: flex;
+    flex-flow: column;
+}
+.diagramFigure{
+    flex-grow: 1;
+}
+
+.replayBtn{
+    margin-left: auto;
+    order:2;
 }
