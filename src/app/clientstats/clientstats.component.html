@@ -1,0 +1,38 @@
+<h1>Client stats</h1>
+<mat-grid-list cols="{{maxCols}}" rowHeight="500px" (window:resize)="onResize($event)">
+    <mat-grid-tile [colspan]="cols(4)" [rowspan]="rows(1)">
+        <div class="gridcontent">
+            <h1>
+                Distance line diagram
+            </h1>
+            <mat-divider></mat-divider>
+            <figure id="distancehistory"></figure>
+        </div>
+    </mat-grid-tile>
+    <mat-grid-tile [colspan]="cols(1)" [rowspan]="rows(2)">
+        <div class="gridcontent">
+            <h1>
+                Distances text
+            </h1>
+            <mat-divider></mat-divider>
+        </div>
+    </mat-grid-tile>
+    <mat-grid-tile [colspan]="cols(2)" [rowspan]="rows(1)">
+        <div class="gridcontent">
+            <h1>
+                Average speed history
+            </h1>
+            <mat-divider></mat-divider>
+            <figure id="distancerings"></figure>
+        </div>
+    </mat-grid-tile>
+    <mat-grid-tile [colspan]="cols(2)" [rowspan]="rows(1)">
+        <div class="gridcontent">
+            <h1>
+                Rings? diagram
+            </h1>
+            <mat-divider></mat-divider>
+            <figure id="speedhistory"></figure>
+        </div>
+    </mat-grid-tile>
+</mat-grid-list>
