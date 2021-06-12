@@ -3,6 +3,8 @@ import { ClientHistory } from '../interfaces/client-history';
 import{Client} from '../interfaces/client';
 import { Numeric } from 'd3-array';
 import * as d3 from 'd3';
+import { axisRight, axisTop } from 'd3';
+import { max } from 'rxjs/operators';
 @Component({
   selector: 'app-clientstats',
   templateUrl: './clientstats.component.html',
@@ -31,6 +33,20 @@ export class ClientstatsComponent implements OnInit, OnChanges {
   ringXAxis:any;
   ringSVG:any;
   circle:any;
+
+  ///Distancehistory svg elements
+  xDistanceHistory:any;
+  yDistanceHistory:any;
+  xAxisDistanceHistory:any;
+  yAxisDistanceHistory:any;
+  distanceHistorySVG:any;
+
+  //Speed history svg elements
+  xSpeedHistory:any;
+  ySpeedHistory:any;
+  xAxisSpeedHistory:any;
+  yAxisSpeedHistory:any;
+  speedHistorySVG:any;
 
   constructor() { 
     this.clientHistory = {
@@ -69,17 +85,126 @@ export class ClientstatsComponent implements OnInit, OnChanges {
 
   assembleStats(){
     this.analyzeHistory();
-    this.drawAverageSpeedHistoryDiagram();
-    this.drawDistanceHistoryDiagram();
     this.drawRingsDiagram();
+    if(this.clientHistory.value.length>=2){
+      this.drawAverageSpeedHistoryDiagram();
+      this.drawDistanceHistoryDiagram();
+    }else{
+      this.clearDiagram();
+    }
+  }
+
+  clearDiagram(){
+    this.distanceHistorySVG = d3.select("figure#clientdistancehistory");
+    this.distanceHistorySVG.selectAll("*").remove();
   }
 
   drawDistanceHistoryDiagram(){
-    console.log("todo");
+    //Select diagram and empty it
+    this.distanceHistorySVG = d3.select("figure#clientdistancehistory");
+    this.distanceHistorySVG.selectAll("*").remove();
+    //Get available width and height
+    let width = this.distanceHistorySVG.node().getBoundingClientRect().width;
+    let height = this.distanceHistorySVG.node().getBoundingClientRect().height;
+    //Add svg element to figure
+    this.distanceHistorySVG = this.distanceHistorySVG.append("svg")
+                                                     .attr("preserveAspectRatio", "xMinYMin meet")
+                                                     .attr("viewBox", "-40 20 "+width+" "+height)
+                                                     .append("g");
+
+    //select max and min values to set the appropriate domain of x and y axis
+    var maxdate = this.clientHistory.value.reduce((a:Client,b:Client)=>{
+      return a.timeOfScan>b.timeOfScan?a:b
+    }).timeOfScan;
+    var mindate = this.clientHistory.value.reduce((a:Client,b:Client)=>{
+      return a.timeOfScan<b.timeOfScan?a:b
+    }).timeOfScan;
+    var maxdistance = this.clientHistory.value.reduce((a:Client,b:Client)=>{
+      return a.distance24>b.distance24?a:b
+    }).distance24;
+    //Set scalers, xAxis and yAxis for diagram
+    this.xDistanceHistory = d3.scaleTime().rangeRound([0,width]).domain([mindate,maxdate]);
+    this.yDistanceHistory = d3.scaleLinear().domain([0, maxdistance+5]).range([height,0]);
+    this.yAxisDistanceHistory = this.distanceHistorySVG.append("g").attr("transform", "translate(0,0)").call(d3.axisLeft(this.yDistanceHistory));
+    this.xAxisDistanceHistory = this.distanceHistorySVG.append("g").attr("transform","translate(0,"+height+")").call(d3.axisBottom(this.xDistanceHistory));
+    //Set linebuilder
+    var lineBuilder = d3.line().x((d:any)=>{return this.xDistanceHistory(d[0])}).y((d:any)=>{return this.yDistanceHistory(d[1])});
+    //Extract values
+    var values:[number,number][] = [];
+    this.clientHistory.value.forEach((c:Client)=>{
+      values.push([c.timeOfScan.getTime(),c.distance24]);
+    });
+    //Create and draw line
+    var line = this.distanceHistorySVG.append("path")
+                                      .attr("class","chart-line")
+                                      .style("fill","none")
+                                      .style("stroke",this.clientHistory.color)
+                                      .style("stroke-width","4px")
+                                      .attr("d",lineBuilder(values));
+                       
   }
 
   drawAverageSpeedHistoryDiagram(){
-    console.log("todo");
+    //Select diagram and empty it
+    this.speedHistorySVG = d3.select("figure#speedhistory");
+    this.speedHistorySVG.selectAll("*").remove();
+    //Get available width and height
+    let width = this.speedHistorySVG.node().getBoundingClientRect().width;
+    let height = this.speedHistorySVG.node().getBoundingClientRect().height;
+    //Add svg element to figure
+    this.speedHistorySVG = this.speedHistorySVG.append("svg")
+                                                     .attr("preserveAspectRatio", "xMinYMin meet")
+                                                     .attr("viewBox", "-40 20 "+width+" "+height)
+                                                     .append("g");
+
+    //select max and min values to set the appropriate domain of y axis
+    var maxdate = this.clientHistory.value.reduce((a:Client,b:Client)=>{
+      return a.timeOfScan>b.timeOfScan?a:b
+    }).timeOfScan;
+    var mindate = this.clientHistory.value.reduce((a:Client,b:Client)=>{
+      return a.timeOfScan<b.timeOfScan?a:b
+    }).timeOfScan;
+
+    //Calculate speed between data points
+    var linesdata:[number,number][][]=[];
+    let data = this.clientHistory.value;
+    data.sort((a:Client,b:Client)=>{
+      return a.timeOfScan.getTime()-b.timeOfScan.getTime();
+    });
+    //Calculate speed between the distances
+    var result = data.reduce(function(acc,element,index,array){
+      acc.sum += element.distance24-acc.prev.distance24;
+      var speed = (element.distance24-acc.prev.distance24)/(Math.abs(element.timeOfScan.getTime()-acc.prev.timeOfScan.getTime())/1000);
+      index && isFinite(speed) && acc.array.push([[speed,acc.prev.timeOfScan.getTime()],[speed,element.timeOfScan.getTime()]]);
+      acc.prev=element;
+      return acc;
+    },{array:linesdata,sum:0,prev:data[0]});
+    //Get max and min speed
+    if(result.array.length>=1){
+      console.log("hello");
+      var maxspeed = result.array.reduce((a:[number,number][], b:[number, number][])=>{
+        return a[0][0]>b[0][0]?a:b;
+      })[0][0];
+      var minspeed = result.array.reduce((a:[number,number][], b:[number, number][])=>{
+        return a[0][0]<b[0][0]?a:b;
+      })[0][0];
+          //Set scalers, xAxis and yAxis for diagram
+      this.xSpeedHistory = d3.scaleTime().rangeRound([0,width]).domain([mindate,maxdate]);
+      this.ySpeedHistory = d3.scaleLinear().domain([-5, 5]).range([height,0]);
+      this.yAxisSpeedHistory= this.speedHistorySVG.append("g").attr("transform", "translate(0,0)").call(d3.axisLeft(this.ySpeedHistory));
+      this.xAxisSpeedHistory = this.speedHistorySVG.append("g").attr("transform","translate(0,"+height/2+")").call(d3.axisBottom(this.xSpeedHistory));
+
+      //Set linebuilder
+      var lineBuilder = d3.line().x((d:any)=>{return this.xSpeedHistory(d[1])}).y((d:any)=>{return this.ySpeedHistory(d[0])});
+      //Create and draw line
+      var lines = this.speedHistorySVG.selectAll(".chart-line").data(result.array);
+      lines.enter().append("path").attr("class","chart-line").style("fill","none").style("stroke",this.clientHistory.color)
+                   .style("stroke-width","4px")
+                   .attr("d",(d:any)=>{
+                     return lineBuilder(d);
+                   });
+    }
+    
   }
 
   drawRingsDiagram(){
@@ -112,15 +237,18 @@ export class ClientstatsComponent implements OnInit, OnChanges {
   }
 
   animateRing(){
+    let data = this.clientHistory.value;
+    data.sort((a:Client,b:Client)=>{
+      return a.timeOfScan.getTime()-b.timeOfScan.getTime();
+    });
     this.circle.attr("r",0);
-    this.clientHistory.value.forEach((c:Client, index:number)=>{
+    data.forEach((c:Client, index:number)=>{
       this.circle.transition()
             .delay(1500*index)
             .ease(d3.easeSin)
             .duration(1000)
             .attr("r",this.xRing(c.distance24));
     });
-    
   }
 
   analyzeHistory(){

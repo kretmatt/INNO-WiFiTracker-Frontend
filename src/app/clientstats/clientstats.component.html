@@ -6,7 +6,7 @@
                 Distance line diagram
             </h1>
             <mat-divider></mat-divider>
-            <figure id="distancehistory" class="diagramFigure"></figure>
+            <figure id="clientdistancehistory" class="diagramFigure"></figure>
         </div>
     </mat-grid-tile>
     <mat-grid-tile [colspan]="cols(1)" [rowspan]="rows(2)">
@@ -15,7 +15,7 @@
                 Client stats
             </h1>
             <mat-divider></mat-divider>
-            <div *ngIf="clientHistory.value.length>2; else defaultContent">
+            <div *ngIf="clientHistory.value.length>=2; else defaultContent">
                 <p>Scanned count: {{scannedCount}}</p>
                 <p>Distance deviation (start/finish): {{distanceDeviation}} m</p>
                 <p>Average speed: {{averageSpeed}} m/s</p>

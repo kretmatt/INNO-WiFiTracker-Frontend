@@ -155,7 +155,7 @@ export class ClientsComponent implements AfterContentInit {
     //set domain of x and y axis and animate transition to new axis
     this.x.domain([mindate,maxdate]);
     this.xAxis.transition().duration(1000).call(d3.axisBottom(this.x));
-    this.y.domain([0, maxdistance]);
+    this.y.domain([0, maxdistance+5]);
     this.yAxis.transition().duration(1000).call(d3.axisLeft(this.y));
 
     //create a line builder and select all lines
