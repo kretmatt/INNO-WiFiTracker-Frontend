@@ -5,8 +5,6 @@ import { Client } from '../interfaces/client';
 import { ClientsService } from '../services/clients.service';
 import * as d3 from 'd3';
 import * as d3Collection from 'd3-collection';
-import { XhrFactory } from '@angular/common/http';
-import { timeout } from 'rxjs/operators';
 import { ModalService } from '../services/modal.service';
 import { ClientHistory } from '../interfaces/client-history';
 
@@ -19,7 +17,7 @@ export class ClientsComponent implements AfterContentInit {
   timeOfScan:Date=new Date();
   clients:Client[]=[];
   clientHistory:Client[]=[];
-  diagramColors:string[][]=[]
+  diagramColors:string[][]=[];
   subscription:Subscription=new Subscription();
   svg:any;
   msvg:any;
@@ -33,9 +31,11 @@ export class ClientsComponent implements AfterContentInit {
   margin:number=50;
   width:number=750;
   height:number=400;
+  lastScan:Date = new Date();
   clientHistoryGroupedByMac: [] = [];
   selectedClients: string[]=[];
   selectedClientHistory:ClientHistory;
+  colorMap:Map<string,string>=new Map<string,string>();
 
   constructor(private clientService: ClientsService, private modalService:ModalService) {
     this.selectedClientHistory = {
@@ -67,38 +67,45 @@ export class ClientsComponent implements AfterContentInit {
     this.clientService.getClients().subscribe(
       (data:any)=>{
         this.timeOfScan=new Date(data.timeOfScan);
-        var clientJSON = data.data.clients.filter((c:any)=>!(c.MAC==="BSSID"||c.MAC===""||c.MAC==="Station MAC"));
-        this.clients=[];
-        clientJSON.forEach((c:any) => {
-          this.clients.push({
-            MAC:c.MAC,
-            power:+c.power,
-            firstTimeSeen:c.firstTimeSeen,
-            lastTimeSeen:c.lastTimeSeen,
-            packets:+c.packets,
-            BSSID:c.BSSID,
-            probes:c.probes,
-            distance24:c.distance_2_4ghz+Math.random()*10,
-            distance5:c.distance_5ghz,
-            timeOfScan:new Date(data.timeOfScan)
+        if(this.timeOfScan.getTime()!==this.lastScan.getTime()){
+          this.lastScan = this.timeOfScan;
+          var clientJSON = data.data.clients.filter((c:any)=>!(c.MAC==="BSSID"||c.MAC===""||c.MAC==="Station MAC"));
+          this.clients=[];
+          clientJSON.forEach((c:any) => {
+            if(this.clients.find((c2:Client)=>c2.MAC===c.MAC && c2.timeOfScan===this.timeOfScan)===undefined){
+              this.clients.push({
+                MAC:c.MAC,
+                power:+c.power,
+                firstTimeSeen:c.firstTimeSeen,
+                lastTimeSeen:c.lastTimeSeen,
+                packets:+c.packets,
+                BSSID:c.BSSID,
+                probes:c.probes,
+                distance24:c.distance_2_4ghz+Math.random()*10,
+                distance5:c.distance_5ghz,
+                timeOfScan:new Date(data.timeOfScan)
+              });
+            }
+            if(this.clientHistory.find((c2:Client)=>c2.MAC===c.MAC && c2.timeOfScan===this.timeOfScan)===undefined){
+              this.clientHistory.push({
+                MAC:c.MAC,
+                power:+c.power,
+                firstTimeSeen:c.firstTimeSeen,
+                lastTimeSeen:c.lastTimeSeen,
+                packets:+c.packets,
+                BSSID:c.BSSID,
+                probes:c.probes,
+                distance24:c.distance_2_4ghz+Math.random()*10,
+                distance5:c.distance_5ghz,
+                timeOfScan:new Date(data.timeOfScan)
+              });
+            }
           });
-          this.clientHistory.push({
-            MAC:c.MAC,
-            power:+c.power,
-            firstTimeSeen:c.firstTimeSeen,
-            lastTimeSeen:c.lastTimeSeen,
-            packets:+c.packets,
-            BSSID:c.BSSID,
-            probes:c.probes,
-            distance24:c.distance_2_4ghz+Math.random()*10,
-            distance5:c.distance_5ghz,
-            timeOfScan:new Date(data.timeOfScan)
-          });
-        });
-        this.drawDistances(this.clients);
-        this.clientHistory=this.clientHistory.filter(c=>c.timeOfScan.getTime()>new Date(Date.now()-2000*60).getTime());
-        this.drawDistanceHistory(this.clientHistory);
-        this.clientHistoryGroupedByMac = this.groupByType(this.clientHistory);
+          this.drawDistances(this.clients);
+          this.clientHistory=this.clientHistory.filter(c=>c.timeOfScan.getTime()>new Date(Date.now()-3000*60).getTime());
+          this.drawDistanceHistory(this.clientHistory);
+          this.clientHistoryGroupedByMac = this.groupByType(this.clientHistory);
+        }
       }
     );
   }
@@ -139,7 +146,14 @@ export class ClientsComponent implements AfterContentInit {
     
     //group client data by MAC/GUID
     var groupedClientData = d3Collection.nest().key(function(c:any){return c.MAC;}).entries(data); 
-    
+    groupedClientData.forEach((c:any)=>{
+      if(this.colorMap.has(c.key)){
+        c.color = this.colorMap.get(c.key);
+        console.log(c.key+" "+c.color);
+      }else{
+        c.color = this.diagramColor(c.key);
+      }
+    });
     //select max and min values to set the appropriate domain of x and y axis
     var maxdate = data.reduce((a:Client,b:Client)=>{
       return a.timeOfScan>b.timeOfScan?a:b
@@ -147,7 +161,6 @@ export class ClientsComponent implements AfterContentInit {
     var mindate = data.reduce((a:Client,b:Client)=>{
       return a.timeOfScan<b.timeOfScan?a:b
     }).timeOfScan;
-    console.log(mindate);
     var maxdistance = data.reduce((a:Client,b:Client)=>{
       return a.distance24>b.distance24?a:b
     }).distance24;
@@ -161,9 +174,12 @@ export class ClientsComponent implements AfterContentInit {
     //create a line builder and select all lines
     var lineBuilder = d3.line().x((d:any)=>{return this.x(d.timeOfScan)}).y((d:any)=>{return this.y(d.distance24)});
     var lines = this.msvg.selectAll(".chart-line").data(groupedClientData);
+        
     //set colors of new entries in the diagram
     lines.enter().append("path").attr("class","chart-line").style("fill","none").style("stroke",(c:any)=>{
-      return this.diagramColor(c.key);
+      console.log(c.key+" "+c.color);
+
+      return c.color;
     })
     .style("stroke-width","4px");
     //build lines in diagram
@@ -188,7 +204,6 @@ export class ClientsComponent implements AfterContentInit {
         let index = this.selectedClients.indexOf(c.key);
         this.selectedClients.splice(index,1);
       }
-      console.log(this.selectedClients)
     });
     //remove obsolete data
     lines.exit().remove();
@@ -251,7 +266,6 @@ export class ClientsComponent implements AfterContentInit {
         let index = this.selectedClients.indexOf(c.MAC);
         this.selectedClients.splice(index,1);
       }
-      console.log(this.selectedClients)
     })
     //
     .merge(circles).transition("time")
@@ -273,21 +287,22 @@ export class ClientsComponent implements AfterContentInit {
 
   diagramColor(clientGUID:string){
     var color = "";
-    //check if color has already been assigned to client
+    //assign color to client if no color has been assigned to client
+    if(!(this.colorMap.has(clientGUID))){
+      color=environment.palette[Math.floor(Math.random()*environment.palette.length)];
+      this.colorMap.set(clientGUID,color);
+    }
+    return this.colorMap.get(clientGUID);
+  }
+
+  checkForClient(clientGUID:string){
+    var color = "";
     this.diagramColors.forEach(element => {
       if(element[0]==clientGUID){
         color=element[1];
       }
     });
-    //assign color to client if no color has been assigned to client
-    if(color==""){
-      var clientColor = [];
-      clientColor.push(clientGUID);
-      color=environment.palette[Math.floor(Math.random()*environment.palette.length)];
-      clientColor.push(color);
-      this.diagramColors.push(clientColor);
-    }
-    return color;
+    return color!==""?true:false;
   }
 
   groupByType(array:Client[]){
@@ -303,7 +318,6 @@ export class ClientsComponent implements AfterContentInit {
   }
 
   selectClientHistory(sch:any, id:string){
-    console.log(sch);
     this.selectedClientHistory={
       key:sch.key,
       value:sch.value,

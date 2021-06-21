@@ -6,9 +6,10 @@ import { NetworksComponent } from './networks/networks.component';
 
 const routes: Routes = [
   {path:'home',component:HomeComponent},
-  {path:'',redirectTo:'/home',pathMatch:'full'},
   {path:'clients',component:ClientsComponent},
-  {path:'networks',component:NetworksComponent}
+  {path:'networks',component:NetworksComponent},
+  {path:'',redirectTo:'/home',pathMatch:'full'},
+  {path:'**',redirectTo:'/home',pathMatch:'full'}
 ];
 
 @NgModule({

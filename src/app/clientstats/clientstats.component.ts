@@ -27,6 +27,8 @@ export class ClientstatsComponent implements OnInit, OnChanges {
   distanceDeviation:number=0;
   scannedCount:number=0;
   overallTrend:string="";
+  packetCount:number=0;
+  averagePower:number=0;
 
   //Ring svg elements
   xRing:any;
@@ -181,14 +183,13 @@ export class ClientstatsComponent implements OnInit, OnChanges {
     },{array:linesdata,sum:0,prev:data[0]});
     //Get max and min speed
     if(result.array.length>=1){
-      console.log("hello");
       var maxspeed = result.array.reduce((a:[number,number][], b:[number, number][])=>{
         return a[0][0]>b[0][0]?a:b;
       })[0][0];
       var minspeed = result.array.reduce((a:[number,number][], b:[number, number][])=>{
         return a[0][0]<b[0][0]?a:b;
       })[0][0];
-          //Set scalers, xAxis and yAxis for diagram
+      //Set scalers, xAxis and yAxis for diagram
       this.xSpeedHistory = d3.scaleTime().rangeRound([0,width]).domain([mindate,maxdate]);
       this.ySpeedHistory = d3.scaleLinear().domain([-5, 5]).range([height,0]);
       this.yAxisSpeedHistory= this.speedHistorySVG.append("g").attr("transform", "translate(0,0)").call(d3.axisLeft(this.ySpeedHistory));
@@ -263,12 +264,16 @@ export class ClientstatsComponent implements OnInit, OnChanges {
       this.overallTrend="";
     }else{
       data.sort((a:Client,b:Client)=>{
-        return b.timeOfScan.getTime()-a.timeOfScan.getTime();
+        return a.timeOfScan.getTime()-b.timeOfScan.getTime();
       });
       //Check how often the client appeared on scans
       this.scannedCount = this.clientHistory.value.length;
       //Calculate average distance to Scanning station
       this.averageDistance = data.reduce((total:number, next:Client)=>total+next.distance24,0) / data.length;
+      //Calculate the packet count
+      this.packetCount = data.reduce((total:number, next:Client)=>total+next.packets,0);
+      //Calculate the average power
+      this.averagePower = data.reduce((total:number,next:Client)=>total+Math.abs(next.power),0)/data.length;
       //Calculate average speed and distance deviation
       var latestdate = data.reduce((a:Client,b:Client)=>{
         return a.timeOfScan>b.timeOfScan?a:b
@@ -284,6 +289,25 @@ export class ClientstatsComponent implements OnInit, OnChanges {
       }).distance24;
       this.distanceDeviation = Math.abs(latestDistance-oldestDistance);
       this.averageSpeed = (latestDistance+oldestDistance)/((latestdate.getTime()-oldestdate.getTime())/1000)
+
+      var linesdata:[number,number][][]=[];
+      data.sort((a:Client,b:Client)=>{
+        return a.timeOfScan.getTime()-b.timeOfScan.getTime();
+      });
+      //Calculate speed between the distances
+      var result = data.reduce(function(acc,element,index,array){
+        acc.sum += element.distance24-acc.prev.distance24;
+        var speed = (element.distance24-acc.prev.distance24)/(Math.abs(element.timeOfScan.getTime()-acc.prev.timeOfScan.getTime())/1000);
+        index && isFinite(speed) && acc.array.push([[speed,acc.prev.timeOfScan.getTime()],[speed,element.timeOfScan.getTime()]]);
+        acc.prev=element;
+        return acc;
+      },{array:linesdata,sum:0,prev:data[0]});
+      var helper = 0;
+      result.array.forEach((ra)=>{
+        helper += (ra[0][0]*((ra[1][1]-ra[0][1])/1000))
+      });
+      this.averageSpeed = (helper)/((latestdate.getTime()-oldestdate.getTime())/1000)
+
       //Iterate over the the client history to find covered distance, 
       let currentDistance=0;
       let currCovDistance;

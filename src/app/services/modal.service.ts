@@ -9,7 +9,6 @@ export class ModalService {
 
   add(modal:any){
     this.modals.push(modal);
-    console.log(this.modals);
   }
 
   remove(id:string){
@@ -17,7 +16,6 @@ export class ModalService {
   }
 
   open(id:string){
-    console.log(id);
     const modal = this.modals.find(x=>x.id===id);
     modal.open();
   }
