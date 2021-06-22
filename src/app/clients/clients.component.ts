@@ -73,6 +73,7 @@ export class ClientsComponent implements AfterContentInit {
           this.clients=[];
           clientJSON.forEach((c:any) => {
             if(this.clients.find((c2:Client)=>c2.MAC===c.MAC && c2.timeOfScan===this.timeOfScan)===undefined){
+              //Add client data to current client array
               this.clients.push({
                 MAC:c.MAC,
                 power:+c.power,
@@ -87,6 +88,7 @@ export class ClientsComponent implements AfterContentInit {
               });
             }
             if(this.clientHistory.find((c2:Client)=>c2.MAC===c.MAC && c2.timeOfScan===this.timeOfScan)===undefined){
+              //Add client data to clienthistory array
               this.clientHistory.push({
                 MAC:c.MAC,
                 power:+c.power,
@@ -101,9 +103,13 @@ export class ClientsComponent implements AfterContentInit {
               });
             }
           });
+          //Generate ring distance diagram
           this.drawDistances(this.clients);
-          this.clientHistory=this.clientHistory.filter(c=>c.timeOfScan.getTime()>new Date(Date.now()-3000*60).getTime());
+          //Remove old data
+          this.clientHistory=this.clientHistory.filter(c=>c.timeOfScan.getTime()>new Date(Date.now()-environment.sortOutTime*60).getTime());
+          //Generate multi line diagram
           this.drawDistanceHistory(this.clientHistory);
+          //Group data for
           this.clientHistoryGroupedByMac = this.groupByType(this.clientHistory);
         }
       }
@@ -111,13 +117,15 @@ export class ClientsComponent implements AfterContentInit {
   }
 
   initDiagram():void{
-    //Initialise the svg element inside the fiure tag with the id distance
+    //Initialise the svg element inside the figure tag with the id distance
     this.svg = d3.select("figure#distance")
       .append("svg")
       .attr("preserveAspectRatio", "xMinYMin meet")
       .attr("viewBox", "0 0 "+this.width+" "+this.width)
       .append("g");
+    //Initialize scaler for axis
     this.x2 = d3.scaleLinear().domain([0,50]).range([0,(this.width/2)-10]);
+    //Create and place axis inside svg element
     this.x2Axis = this.svg.append("g").attr("transform","translate("+this.width/2+","+this.width/2+")").call(d3.axisBottom(this.x2));
     //Enable zoom functionality
     var svgcontainer = this.svg;
@@ -130,30 +138,24 @@ export class ClientsComponent implements AfterContentInit {
   }
 
   initMultiLineDiagram():void{
+    // Create svg element
     this.msvg=d3.select("figure#distancehistory")
       .append("svg")
       .attr("preserveAspectRatio", "xMinYMin meet")
       .attr("viewBox", "-40 20 "+this.width+" "+this.height)
       .append("g");
-      this.x = d3.scaleTime().rangeRound([0, this.width-this.margin]).domain([new Date(),new Date()]);
+    //Initialize scalers for axes
+    this.x = d3.scaleTime().rangeRound([0, this.width-this.margin]).domain([new Date(),new Date()]);
     this.y = d3.scaleLinear().domain([0,100]).range([this.height,0]);
+    //Initialize and place axes inside svg element
     this.yAxis=this.msvg.append("g").attr("transform", "translate(0,0)").call(d3.axisLeft(this.y));
-    var marhei=this.height;
-    this.xAxis=this.msvg.append("g").attr("transform", "translate(0," + marhei + ")").call(d3.axisBottom(this.x));
+    this.xAxis=this.msvg.append("g").attr("transform", "translate(0," + this.height + ")").call(d3.axisBottom(this.x));
   }
 
   drawDistanceHistory(data:Client[]):void{
     
     //group client data by MAC/GUID
     var groupedClientData = d3Collection.nest().key(function(c:any){return c.MAC;}).entries(data); 
-    groupedClientData.forEach((c:any)=>{
-      if(this.colorMap.has(c.key)){
-        c.color = this.colorMap.get(c.key);
-        console.log(c.key+" "+c.color);
-      }else{
-        c.color = this.diagramColor(c.key);
-      }
-    });
     //select max and min values to set the appropriate domain of x and y axis
     var maxdate = data.reduce((a:Client,b:Client)=>{
       return a.timeOfScan>b.timeOfScan?a:b
@@ -174,14 +176,13 @@ export class ClientsComponent implements AfterContentInit {
     //create a line builder and select all lines
     var lineBuilder = d3.line().x((d:any)=>{return this.x(d.timeOfScan)}).y((d:any)=>{return this.y(d.distance24)});
     var lines = this.msvg.selectAll(".chart-line").data(groupedClientData);
-        
+        //remove obsolete data
+        lines.exit().remove();    
     //set colors of new entries in the diagram
-    lines.enter().append("path").attr("class","chart-line").style("fill","none").style("stroke",(c:any)=>{
-      console.log(c.key+" "+c.color);
-
-      return c.color;
-    })
-    .style("stroke-width","4px");
+    lines.attr("stroke",(c:any)=>{
+      return this.diagramColor(c.key);
+    }).enter().append("path").attr("class","chart-line").attr("fill","none")
+    .attr("stroke-width","4px");
     //build lines in diagram
     lines.attr("d",(d:any)=>{
       return lineBuilder(d.values);
@@ -205,8 +206,7 @@ export class ClientsComponent implements AfterContentInit {
         this.selectedClients.splice(index,1);
       }
     });
-    //remove obsolete data
-    lines.exit().remove();
+
     //animate lines with dasharray
     lines._groups[0].forEach((e:any) => {
       d3.select(e).attr("stroke-dasharray", e.getTotalLength() + " " + e.getTotalLength()) 

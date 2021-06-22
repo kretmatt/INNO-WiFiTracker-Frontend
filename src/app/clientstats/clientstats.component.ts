@@ -86,9 +86,9 @@ export class ClientstatsComponent implements OnInit, OnChanges {
   }
 
   assembleStats(){
-    this.analyzeHistory();
-    this.drawRingsDiagram();
     if(this.clientHistory.value.length>=2){
+      this.analyzeHistory();
+      this.drawRingsDiagram();
       this.drawAverageSpeedHistoryDiagram();
       this.drawDistanceHistoryDiagram();
     }else{

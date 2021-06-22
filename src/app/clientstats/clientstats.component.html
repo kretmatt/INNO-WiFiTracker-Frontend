@@ -15,7 +15,7 @@
                 Client stats
             </h1>
             <mat-divider></mat-divider>
-            <div *ngIf="clientHistory.value.length>=2; else defaultContent">
+            <div>
                 <p>Scanned count: {{scannedCount}}</p>
                 <p>Distance deviation (start/finish): {{distanceDeviation}} m</p>
                 <p>Average speed: {{averageSpeed}} m/s</p>
@@ -24,10 +24,6 @@
                 <p>Packet count: {{packetCount}}</p>
                 <p>Average power: {{averagePower}}</p>
             </div>
-            
-            <ng-template #defaultContent>
-                Client stats can't be calculated, because there are still not enough data points for analysis.
-            </ng-template>
         </div>
     </mat-grid-tile>
     <mat-grid-tile [colspan]="cols(2)" [rowspan]="rows(1)">

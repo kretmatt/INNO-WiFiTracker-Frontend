@@ -15,7 +15,8 @@ export const environment = {
     '#360568', '#5B2A86', '#7785AC', '#A5E6BA',
     '#FF57BB', '#FF8811', '#109648', '#ff3f00',
     '#FF7F11', '#42CAFD', '#C20114', '#89FC00'
-  ]
+  ],
+  sortOutTime:3000
 };
 
 /*
