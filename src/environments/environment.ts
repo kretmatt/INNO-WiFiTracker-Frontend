@@ -3,9 +3,13 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
+  // Build mode
   production: false,
+  // Interval in which requests are sent to the server (e.g.: for retrieving client / network data). Unit: Milliseconds
   requestIntervalTime:10000,
+  // Base URL of the API
   apiURL:'https://wifipersontracker.herokuapp.com',
+  // Color palette of the diagrams
   palette:[
     '#003bdb', '#831aca', '#b800b2', '#dc0095',
     '#f40074', '#ff0055', '#ff0033', '#ff3900',
@@ -16,7 +20,8 @@ export const environment = {
     '#FF57BB', '#FF8811', '#109648', '#ff3f00',
     '#FF7F11', '#42CAFD', '#C20114', '#89FC00'
   ],
-  sortOutTime:3000
+  // Interval in which old data is removed from the clients-component. Unit: Milliseconds
+  sortOutTime:3000*60
 };
 
 /*

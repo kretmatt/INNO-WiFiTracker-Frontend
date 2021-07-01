@@ -16,6 +16,9 @@ export class ClientstatsComponent implements OnInit, OnChanges {
   breakWidth:number=1500;
   break:boolean=false;
 
+  margin:number=50;
+
+  //Clientstats diagrams
   distanceHistoryDiagram:any;
   averageSpeedHistoryDiagram:any;
   ringsDiagram:any;
@@ -111,8 +114,21 @@ export class ClientstatsComponent implements OnInit, OnChanges {
     //Add svg element to figure
     this.distanceHistorySVG = this.distanceHistorySVG.append("svg")
                                                      .attr("preserveAspectRatio", "xMinYMin meet")
-                                                     .attr("viewBox", "-40 20 "+width+" "+height)
+                                                     .attr("viewBox", `-${this.margin} ${this.margin} ${width} ${height}`)
                                                      .append("g");
+    // Add x-Axis label
+    this.distanceHistorySVG.append("text")
+             .attr("text-anchor","end")
+             .attr("x",width-this.margin)
+             .attr("y",height+((this.margin/2)+10))
+             .text("Time of the day");
+    // Add y-Axis label
+    this.distanceHistorySVG.append("text")
+             .attr("text-anchor","end")
+             .attr("x",-this.margin)
+             .attr("y",-this.margin+10)
+             .attr("transform","rotate(-90)")
+             .text("Distance in meters");
 
     //select max and min values to set the appropriate domain of x and y axis
     var maxdate = this.clientHistory.value.reduce((a:Client,b:Client)=>{
@@ -125,9 +141,9 @@ export class ClientstatsComponent implements OnInit, OnChanges {
       return a.distance24>b.distance24?a:b
     }).distance24;
     //Set scalers, xAxis and yAxis for diagram
-    this.xDistanceHistory = d3.scaleTime().rangeRound([0,width]).domain([mindate,maxdate]);
-    this.yDistanceHistory = d3.scaleLinear().domain([0, maxdistance+5]).range([height,0]);
-    this.yAxisDistanceHistory = this.distanceHistorySVG.append("g").attr("transform", "translate(0,0)").call(d3.axisLeft(this.yDistanceHistory));
+    this.xDistanceHistory = d3.scaleTime().rangeRound([0,width-this.margin]).domain([mindate,maxdate]);
+    this.yDistanceHistory = d3.scaleLinear().domain([0, maxdistance+5]).range([height-this.margin,0]);
+    this.yAxisDistanceHistory = this.distanceHistorySVG.append("g").attr("transform", `translate(0,${this.margin})`).call(d3.axisLeft(this.yDistanceHistory));
     this.xAxisDistanceHistory = this.distanceHistorySVG.append("g").attr("transform","translate(0,"+height+")").call(d3.axisBottom(this.xDistanceHistory));
     //Set linebuilder
     var lineBuilder = d3.line().x((d:any)=>{return this.xDistanceHistory(d[0])}).y((d:any)=>{return this.yDistanceHistory(d[1])});
@@ -142,8 +158,8 @@ export class ClientstatsComponent implements OnInit, OnChanges {
                                       .style("fill","none")
                                       .style("stroke",this.clientHistory.color)
                                       .style("stroke-width","4px")
-                                      .attr("d",lineBuilder(values));
-                       
+                                      .attr("d",lineBuilder(values))
+                                      .attr("transform",`translate(0,${this.margin})`);
   }
 
   drawAverageSpeedHistoryDiagram(){
@@ -156,9 +172,21 @@ export class ClientstatsComponent implements OnInit, OnChanges {
     //Add svg element to figure
     this.speedHistorySVG = this.speedHistorySVG.append("svg")
                                                      .attr("preserveAspectRatio", "xMinYMin meet")
-                                                     .attr("viewBox", "-40 20 "+width+" "+height)
+                                                     .attr("viewBox", `-${this.margin} ${this.margin} ${width} ${height}`)
                                                      .append("g");
-
+    // Add x-Axis label
+    this.speedHistorySVG.append("text")
+             .attr("text-anchor","end")
+             .attr("x",width-this.margin)
+             .attr("y",height+((this.margin/2)+10))
+             .text("Time of the day");
+    // Add y-Axis label
+    this.speedHistorySVG.append("text")
+             .attr("text-anchor","end")
+             .attr("x",-this.margin)
+             .attr("y",-this.margin+10)
+             .attr("transform","rotate(-90)")
+             .text("Speed in meters per second");
     //select max and min values to set the appropriate domain of y axis
     var maxdate = this.clientHistory.value.reduce((a:Client,b:Client)=>{
       return a.timeOfScan>b.timeOfScan?a:b
@@ -190,10 +218,10 @@ export class ClientstatsComponent implements OnInit, OnChanges {
         return a[0][0]<b[0][0]?a:b;
       })[0][0];
       //Set scalers, xAxis and yAxis for diagram
-      this.xSpeedHistory = d3.scaleTime().rangeRound([0,width]).domain([mindate,maxdate]);
-      this.ySpeedHistory = d3.scaleLinear().domain([-5, 5]).range([height,0]);
-      this.yAxisSpeedHistory= this.speedHistorySVG.append("g").attr("transform", "translate(0,0)").call(d3.axisLeft(this.ySpeedHistory));
-      this.xAxisSpeedHistory = this.speedHistorySVG.append("g").attr("transform","translate(0,"+height/2+")").call(d3.axisBottom(this.xSpeedHistory));
+      this.xSpeedHistory = d3.scaleTime().rangeRound([0,width-this.margin]).domain([mindate,maxdate]);
+      this.ySpeedHistory = d3.scaleLinear().domain([-5, 5]).range([height-this.margin,0]);
+      this.yAxisSpeedHistory= this.speedHistorySVG.append("g").attr("transform", `translate(0,${this.margin+5})`).call(d3.axisLeft(this.ySpeedHistory));
+      this.xAxisSpeedHistory = this.speedHistorySVG.append("g").attr("transform","translate(0,"+((height/2)+(this.margin/2)+5)+")").call(d3.axisBottom(this.xSpeedHistory));
 
       //Set linebuilder
       var lineBuilder = d3.line().x((d:any)=>{return this.xSpeedHistory(d[1])}).y((d:any)=>{return this.ySpeedHistory(d[0])});
@@ -203,7 +231,8 @@ export class ClientstatsComponent implements OnInit, OnChanges {
                    .style("stroke-width","4px")
                    .attr("d",(d:any)=>{
                      return lineBuilder(d);
-                   });
+                   })
+                   .attr("transform",`translate(0,${this.margin+5})`);
     }
     
   }
@@ -288,8 +317,6 @@ export class ClientstatsComponent implements OnInit, OnChanges {
         return a.timeOfScan<b.timeOfScan?a:b
       }).distance24;
       this.distanceDeviation = Math.abs(latestDistance-oldestDistance);
-      this.averageSpeed = (latestDistance+oldestDistance)/((latestdate.getTime()-oldestdate.getTime())/1000)
-
       var linesdata:[number,number][][]=[];
       data.sort((a:Client,b:Client)=>{
         return a.timeOfScan.getTime()-b.timeOfScan.getTime();

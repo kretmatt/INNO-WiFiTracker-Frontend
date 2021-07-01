@@ -29,8 +29,8 @@ export class ClientsComponent implements AfterContentInit {
   yAxis:any;
   tooltip:any;
   margin:number=50;
-  width:number=750;
-  height:number=400;
+  width:number=750-this.margin;
+  height:number=400-this.margin;
   lastScan:Date = new Date();
   clientHistoryGroupedByMac: [] = [];
   selectedClients: string[]=[];
@@ -106,7 +106,7 @@ export class ClientsComponent implements AfterContentInit {
           //Generate ring distance diagram
           this.drawDistances(this.clients);
           //Remove old data
-          this.clientHistory=this.clientHistory.filter(c=>c.timeOfScan.getTime()>new Date(Date.now()-environment.sortOutTime*60).getTime());
+          this.clientHistory=this.clientHistory.filter(c=>c.timeOfScan.getTime()>new Date(Date.now()-environment.sortOutTime).getTime());
           //Generate multi line diagram
           this.drawDistanceHistory(this.clientHistory);
           //Group data for
@@ -142,14 +142,27 @@ export class ClientsComponent implements AfterContentInit {
     this.msvg=d3.select("figure#distancehistory")
       .append("svg")
       .attr("preserveAspectRatio", "xMinYMin meet")
-      .attr("viewBox", "-40 20 "+this.width+" "+this.height)
+      .attr("viewBox", `-${this.margin} ${this.margin} ${this.width} ${this.height}`)
       .append("g");
     //Initialize scalers for axes
     this.x = d3.scaleTime().rangeRound([0, this.width-this.margin]).domain([new Date(),new Date()]);
-    this.y = d3.scaleLinear().domain([0,100]).range([this.height,0]);
+    this.y = d3.scaleLinear().domain([0,100]).range([this.height-this.margin,0]);
     //Initialize and place axes inside svg element
-    this.yAxis=this.msvg.append("g").attr("transform", "translate(0,0)").call(d3.axisLeft(this.y));
+    this.yAxis=this.msvg.append("g").attr("transform", `translate(0,${this.margin})`).call(d3.axisLeft(this.y));
     this.xAxis=this.msvg.append("g").attr("transform", "translate(0," + this.height + ")").call(d3.axisBottom(this.x));
+    // Add x-Axis label
+    this.msvg.append("text")
+             .attr("text-anchor","end")
+             .attr("x",this.width-this.margin)
+             .attr("y",this.height+((this.margin/2)+10))
+             .text("Time of the day");
+    // Add y-Axis label
+    this.msvg.append("text")
+             .attr("text-anchor","end")
+             .attr("x",-this.margin)
+             .attr("y",-this.margin+10)
+             .attr("transform","rotate(-90)")
+             .text("Distance in meters");
   }
 
   drawDistanceHistory(data:Client[]):void{
@@ -182,7 +195,8 @@ export class ClientsComponent implements AfterContentInit {
     lines.attr("stroke",(c:any)=>{
       return this.diagramColor(c.key);
     }).enter().append("path").attr("class","chart-line").attr("fill","none")
-    .attr("stroke-width","4px");
+    .attr("stroke-width","4px")
+    .attr("transform",`translate(0,${this.margin})`);
     //build lines in diagram
     lines.attr("d",(d:any)=>{
       return lineBuilder(d.values);
@@ -267,7 +281,7 @@ export class ClientsComponent implements AfterContentInit {
         this.selectedClients.splice(index,1);
       }
     })
-    //
+    //Merge with existing circles
     .merge(circles).transition("time")
       .duration(500)
       .attr("r", (d:Client)=>(this.x2(d.distance24)))

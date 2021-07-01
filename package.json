@@ -35,7 +35,7 @@
     "@angular-devkit/build-angular": "~0.1100.5",
     "@angular/cli": "^11.2.14",
     "@angular/compiler-cli": "~11.0.5",
-    "@types/d3": "^6.7.0",
+    "@types/d3": "^6.7.5",
     "@types/d3-collection": "^1.0.10",
     "@types/jasmine": "^3.7.7",
     "@types/node": "^12.20.15",
@@ -50,6 +50,6 @@
     "protractor": "~7.0.0",
     "ts-node": "~8.3.0",
     "tslint": "~6.1.0",
-    "typescript": "^4.0.8"
+    "typescript": "^>=4.0.0 <4.1.0"
   }
 }

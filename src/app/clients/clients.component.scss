@@ -33,3 +33,9 @@
 .detailbtn{
     margin-right: 10px;
 }
+
+@media(max-width:950px){
+    .container{
+        flex-direction: column;
+    }
+}
