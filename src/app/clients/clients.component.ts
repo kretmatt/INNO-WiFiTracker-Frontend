@@ -1,3 +1,4 @@
+// Import statements
 import { AfterContentInit, Component, OnInit } from '@angular/core';
 import { interval, Subscription } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -14,29 +15,39 @@ import { ClientHistory } from '../interfaces/client-history';
   styleUrls: ['./clients.component.scss']
 })
 export class ClientsComponent implements AfterContentInit {
+
+  // Scan dates / times
   timeOfScan:Date=new Date();
-  clients:Client[]=[];
-  clientHistory:Client[]=[];
-  diagramColors:string[][]=[];
-  subscription:Subscription=new Subscription();
-  svg:any;
-  msvg:any;
-  x:any;
-  y:any;
-  x2:any;
-  xAxis:any;
-  x2Axis:any;
-  yAxis:any;
-  tooltip:any;
-  margin:number=50;
-  width:number=750-this.margin;
-  height:number=400-this.margin;
   lastScan:Date = new Date();
-  clientHistoryGroupedByMac: [] = [];
+
+  // Clients data
+  currentClients:Client[]=[];
+  pastClients:Client[]=[];
+  clientHistories: [] = [];
   selectedClients: string[]=[];
   selectedClientHistory:ClientHistory;
+  subscription:Subscription=new Subscription();
+  
+  // General diagram properties
+  tooltip:any;
+  padding:number=50;
+  width:number=750-this.padding;
+  height:number=400-this.padding;
   colorMap:Map<string,string>=new Map<string,string>();
 
+  // Ring diagram
+  ringSVG:any;
+  ringX:any;
+  ringXAxis:any;
+
+  // Multiline diagram
+  multilineSVG:any;
+  multilineX:any;
+  multilineY:any;
+  multilineXAxis:any;
+  multilineYAxis:any;
+
+  // Set default value of selectedClientHistory and inject instances of ClientsService and ModalService
   constructor(private clientService: ClientsService, private modalService:ModalService) {
     this.selectedClientHistory = {
       key:"",
@@ -45,36 +56,47 @@ export class ClientsComponent implements AfterContentInit {
     };
    }
 
+  // Angular lifecycle hook that gets called once content is initialized. Set up subscription and generate diagrams after short timeout
   ngAfterContentInit(): void {
     setTimeout(()=>{
+      // Get available width for diagrams
       var w = document.getElementById("diagrams")?.clientWidth;
       if(w!=null){
         this.width = w;
       }
-      this.initDiagram();
+      // Generate diagrams
+      this.initRingDiagram();
       this.initMultiLineDiagram();
+      // Receive data and set up scubscription
       this.receiveData();
       this.subscription = interval(environment.requestIntervalTime).subscribe(()=>this.receiveData());
     },500);
-    
   }
 
+  // Unsubscribe from subscription to avoid unnecessary calls to API after the component gets destroyed
   ngOnDestroy():void{
     this.subscription.unsubscribe();
   }
 
+  // Retrieve data from API, set values of variables and draw diagrams content
   receiveData(){
     this.clientService.getClients().subscribe(
       (data:any)=>{
+        // Set timeOfScan to latest scan
         this.timeOfScan=new Date(data.timeOfScan);
+        // Check whether or not the latestScan value is lastScan. If so, skip assignment of data and drawing of diagrams
         if(this.timeOfScan.getTime()!==this.lastScan.getTime()){
+          // Set lastScan to timeOfScan
           this.lastScan = this.timeOfScan;
+          // Filter invalid data
           var clientJSON = data.data.clients.filter((c:any)=>!(c.MAC==="BSSID"||c.MAC===""||c.MAC==="Station MAC"));
-          this.clients=[];
+          // Clear currentClients
+          this.currentClients=[];
           clientJSON.forEach((c:any) => {
-            if(this.clients.find((c2:Client)=>c2.MAC===c.MAC && c2.timeOfScan===this.timeOfScan)===undefined){
-              //Add client data to current client array
-              this.clients.push({
+            // Check if entry for client already exists in currentClients to avoid several entries of the same client for the exact same time
+            if(this.currentClients.find((c2:Client)=>c2.MAC===c.MAC && c2.timeOfScan===this.timeOfScan)===undefined){
+              //Add client data to currentClients array
+              this.currentClients.push({
                 MAC:c.MAC,
                 power:+c.power,
                 firstTimeSeen:c.firstTimeSeen,
@@ -87,9 +109,10 @@ export class ClientsComponent implements AfterContentInit {
                 timeOfScan:new Date(data.timeOfScan)
               });
             }
-            if(this.clientHistory.find((c2:Client)=>c2.MAC===c.MAC && c2.timeOfScan===this.timeOfScan)===undefined){
-              //Add client data to clienthistory array
-              this.clientHistory.push({
+            // Check if entry for client already exists in pastClients to avoid several entries of the same client for the exact same time
+            if(this.pastClients.find((c2:Client)=>c2.MAC===c.MAC && c2.timeOfScan===this.timeOfScan)===undefined){
+              //Add client data to pastClients array
+              this.pastClients.push({
                 MAC:c.MAC,
                 power:+c.power,
                 firstTimeSeen:c.firstTimeSeen,
@@ -104,31 +127,32 @@ export class ClientsComponent implements AfterContentInit {
             }
           });
           //Generate ring distance diagram
-          this.drawDistances(this.clients);
+          this.drawDistances(this.currentClients);
           //Remove old data
-          this.clientHistory=this.clientHistory.filter(c=>c.timeOfScan.getTime()>new Date(Date.now()-environment.sortOutTime).getTime());
+          this.pastClients=this.pastClients.filter(c=>c.timeOfScan.getTime()>new Date(Date.now()-environment.sortOutTime).getTime());
           //Generate multi line diagram
-          this.drawDistanceHistory(this.clientHistory);
+          this.drawDistanceHistory(this.pastClients);
           //Group data for
-          this.clientHistoryGroupedByMac = this.groupByType(this.clientHistory);
+          this.clientHistories = this.groupByType(this.pastClients);
         }
       }
     );
   }
 
-  initDiagram():void{
-    //Initialise the svg element inside the figure tag with the id distance
-    this.svg = d3.select("figure#distance")
+  // Generate container and axes for the ring diagram
+  initRingDiagram():void{
+    //Initialize the svg element inside the figure tag with the id distance
+    this.ringSVG = d3.select("figure#distance")
       .append("svg")
       .attr("preserveAspectRatio", "xMinYMin meet")
       .attr("viewBox", "0 0 "+this.width+" "+this.width)
       .append("g");
     //Initialize scaler for axis
-    this.x2 = d3.scaleLinear().domain([0,50]).range([0,(this.width/2)-10]);
+    this.ringX = d3.scaleLinear().domain([0,50]).range([0,(this.width/2)-10]);
     //Create and place axis inside svg element
-    this.x2Axis = this.svg.append("g").attr("transform","translate("+this.width/2+","+this.width/2+")").call(d3.axisBottom(this.x2));
+    this.ringXAxis = this.ringSVG.append("g").attr("transform","translate("+this.width/2+","+this.width/2+")").call(d3.axisBottom(this.ringX));
     //Enable zoom functionality
-    var svgcontainer = this.svg;
+    var svgcontainer = this.ringSVG;
     svgcontainer.call(d3.zoom().on('zoom',function(e:any){
       svgcontainer.attr("transform",e.transform)
     }));
@@ -137,39 +161,42 @@ export class ClientsComponent implements AfterContentInit {
       .style("opacity", 0);
   }
 
+  // Generate container and axes for the multiline diagram 
   initMultiLineDiagram():void{
-    // Create svg element
-    this.msvg=d3.select("figure#distancehistory")
+    // Initialize the svg element inside the figure tag with the id distancehistory
+    this.multilineSVG=d3.select("figure#distancehistory")
       .append("svg")
       .attr("preserveAspectRatio", "xMinYMin meet")
-      .attr("viewBox", `-${this.margin} ${this.margin} ${this.width} ${this.height}`)
+      .attr("viewBox", `-${this.padding} ${this.padding} ${this.width} ${this.height}`)
       .append("g");
     //Initialize scalers for axes
-    this.x = d3.scaleTime().rangeRound([0, this.width-this.margin]).domain([new Date(),new Date()]);
-    this.y = d3.scaleLinear().domain([0,100]).range([this.height-this.margin,0]);
+    this.multilineX = d3.scaleTime().rangeRound([0, this.width-this.padding]).domain([new Date(),new Date()]);
+    this.multilineY = d3.scaleLinear().domain([0,100]).range([this.height-this.padding,0]);
     //Initialize and place axes inside svg element
-    this.yAxis=this.msvg.append("g").attr("transform", `translate(0,${this.margin})`).call(d3.axisLeft(this.y));
-    this.xAxis=this.msvg.append("g").attr("transform", "translate(0," + this.height + ")").call(d3.axisBottom(this.x));
+    this.multilineYAxis=this.multilineSVG.append("g").attr("transform", `translate(0,${this.padding})`).call(d3.axisLeft(this.multilineY));
+    this.multilineXAxis=this.multilineSVG.append("g").attr("transform", "translate(0," + this.height + ")").call(d3.axisBottom(this.multilineX));
     // Add x-Axis label
-    this.msvg.append("text")
+    this.multilineSVG.append("text")
              .attr("text-anchor","end")
-             .attr("x",this.width-this.margin)
-             .attr("y",this.height+((this.margin/2)+10))
+             .attr("x",this.width-this.padding)
+             .attr("y",this.height+((this.padding/2)+10))
              .text("Time of the day");
     // Add y-Axis label
-    this.msvg.append("text")
+    this.multilineSVG.append("text")
              .attr("text-anchor","end")
-             .attr("x",-this.margin)
-             .attr("y",-this.margin+10)
+             .attr("x",-this.padding)
+             .attr("y",-this.padding+10)
              .attr("transform","rotate(-90)")
              .text("Distance in meters");
   }
 
+  // Draw / Generate content for the multiline-diagram
   drawDistanceHistory(data:Client[]):void{
     
-    //group client data by MAC/GUID
+    // Group client data by MAC (GUID)
     var groupedClientData = d3Collection.nest().key(function(c:any){return c.MAC;}).entries(data); 
-    //select max and min values to set the appropriate domain of x and y axis
+    
+    // Select max and min values to set the appropriate domain of x and y axes
     var maxdate = data.reduce((a:Client,b:Client)=>{
       return a.timeOfScan>b.timeOfScan?a:b
     }).timeOfScan;
@@ -180,42 +207,50 @@ export class ClientsComponent implements AfterContentInit {
       return a.distance24>b.distance24?a:b
     }).distance24;
 
-    //set domain of x and y axis and animate transition to new axis
-    this.x.domain([mindate,maxdate]);
-    this.xAxis.transition().duration(1000).call(d3.axisBottom(this.x));
-    this.y.domain([0, maxdistance+5]);
-    this.yAxis.transition().duration(1000).call(d3.axisLeft(this.y));
+    // Set domain of x and y axis and animate transition to new axis state
+    this.multilineX.domain([mindate,maxdate]);
+    this.multilineXAxis.transition().duration(1000).call(d3.axisBottom(this.multilineX));
+    this.multilineY.domain([0, maxdistance+5]);
+    this.multilineYAxis.transition().duration(1000).call(d3.axisLeft(this.multilineY));
 
-    //create a line builder and select all lines
-    var lineBuilder = d3.line().x((d:any)=>{return this.x(d.timeOfScan)}).y((d:any)=>{return this.y(d.distance24)});
-    var lines = this.msvg.selectAll(".chart-line").data(groupedClientData);
-        //remove obsolete data
-        lines.exit().remove();    
-    //set colors of new entries in the diagram
+    // Create a line builder with the appropriate scalers and select all lines
+    var lineBuilder = d3.line().x((d:any)=>{return this.multilineX(d.timeOfScan)}).y((d:any)=>{return this.multilineY(d.distance24)});
+    var lines = this.multilineSVG.selectAll(".chart-line").data(groupedClientData);
+    
+    // Remove obsolete data
+    lines.exit().remove();    
+    
+    // Set colors of new entries in the diagram. It is important to assign colors first, otherwise there will be inconsistent colors for clients
     lines.attr("stroke",(c:any)=>{
       return this.diagramColor(c.key);
     }).enter().append("path").attr("class","chart-line").attr("fill","none")
     .attr("stroke-width","4px")
-    .attr("transform",`translate(0,${this.margin})`);
-    //build lines in diagram
+    .attr("transform",`translate(0,${this.padding})`);
+    
+    // Build lines in diagram and set events
     lines.attr("d",(d:any)=>{
       return lineBuilder(d.values);
     }).on("mousemove", (e:any,c:any)=>{
-      //Increase stroke width and show tooltip
+      // Increase stroke width of line
       d3.select(e.originalTarget).style('stroke-width',6);
-      this.tooltip.style('transform', `translate(${e.layerX}px, ${(e.layerY-2*this.margin)}px)`)
+      // Make tooltip visible
+      this.tooltip.style('transform', `translate(${e.layerX}px, ${(e.layerY-2*this.padding)}px)`)
       .style('opacity', 1).style('background-color','#3f51b5').html(c.key)
     })
     .on("mouseout",(e:any)=>{
-      //Decrease stroke width and hide tooltip
+      //Decrease stroke width of line
       d3.select(e.originalTarget).style('stroke-width',4);
+      // Hide tooltip
       this.tooltip.style('opacity',0);
     }).
     on("click", (e:any, c:any)=>{
+      // Add specific client to selectedClients or remove specific client from array
       if(this.selectedClients.indexOf(c.key)===-1)
       {
+        // Add client
         this.selectedClients.push(c.key);
       }else{
+        // Remove client
         let index = this.selectedClients.indexOf(c.key);
         this.selectedClients.splice(index,1);
       }
@@ -223,33 +258,37 @@ export class ClientsComponent implements AfterContentInit {
 
     //animate lines with dasharray
     lines._groups[0].forEach((e:any) => {
+      // Set stroke-dasharray across every line
       d3.select(e).attr("stroke-dasharray", e.getTotalLength() + " " + e.getTotalLength()) 
+      // Set offset of dash to length of line in order to hide it
       .attr("stroke-dashoffset", e.getTotalLength())
       .transition()
         .duration(1000)
         .ease(d3.easeLinear)
+        // Decrease offset in order to reveal line
         .attr("stroke-dashoffset", 0);
     });
 
   }
 
   drawDistances(data:Client[]):void{
+    
     //Sort clients by distance (descending)
     data.sort((a:Client,b:Client)=>b.distance24-a.distance24);
+    
     //Create new variable called circles. It is a selection of all circle elements inside the svg. Set data context to the new client-dataset from the server 
-    var circles=this.svg.selectAll("circle").data(data, function(c:Client){return c.MAC;});
-    //Create variable which references the tooltip instance of the component. Is needed for events such as mousemove and mouseout (context changes and therefore this.tooltip cannot be used)
-    var tt = this.tooltip;
-    var margin = this.margin;
-
+    var circles=this.ringSVG.selectAll("circle").data(data, function(c:Client){return c.MAC;});
+    
+    // Get highest distance24 value for setting the scaler and axis
     var maxdistance = data.reduce((a:Client,b:Client)=>{
       return a.distance24>b.distance24?a:b
     }).distance24;
+    
+    // Set domain of scaler and transition to new state of axis
+    this.ringX.domain([0,maxdistance]);
+    this.ringXAxis.transition().duration(1000).call(d3.axisBottom(this.ringX));
 
-    this.x2.domain([0,maxdistance]);
-    this.x2Axis.transition().duration(1000).call(d3.axisBottom(this.x2));
-
-    //Create new circles
+    // Create a circle element for every client
     circles.enter().append("circle")
     .attr("cx", (this.width)/2)
     .attr("cy",(this.width)/2)
@@ -260,37 +299,39 @@ export class ClientsComponent implements AfterContentInit {
     .attr('stroke-width',2)
     .attr('fill','transparent')
     .attr("stroke-opacity",0)
-    .on("mousemove", function(e:any,c:Client){
-      //Increase stroke width and show tooltip
+    // Set events for every circle
+    .on("mousemove", (e:any,c:Client)=>{
+      //Increase stroke width of ring
       d3.select(e.originalTarget).style('stroke-width',4);
-      tt.style('transform', `translate(${e.layerX}px, ${(e.layerY-2*margin)}px)`)
+      // Make tooltip visible
+      this.tooltip.style('transform', `translate(${e.layerX}px, ${(e.layerY-2*this.padding)}px)`)
       .style('opacity', 1).style('background-color','#3f51b5').html(c.MAC+"<br>"+c.distance24+" m")
     })
-    //Update radius of circles and fade in new rings
-    .on("mouseout",function(e:any){
-      //Decrease stroke width and hide tooltip
+    .on("mouseout",(e:any)=>{
+      //Decrease stroke width of ring 
       d3.select(e.originalTarget).style('stroke-width',2);
-      tt.style('opacity',0);
+      // Hide tooltip
+      this.tooltip.style('opacity',0);
     }).
     on("click", (e:any, c:Client)=>{
+      // Add specific client to selectedClients or remove specific client from array
       if(this.selectedClients.indexOf(c.MAC)===-1)
       {
+        // Add client
         this.selectedClients.push(c.MAC);
       }else{
+        // Remove client
         let index = this.selectedClients.indexOf(c.MAC);
         this.selectedClients.splice(index,1);
       }
     })
-    //Merge with existing circles
+    // Merge the new circles with already existing circles and transition to new radius value
     .merge(circles).transition("time")
       .duration(500)
-      .attr("r", (d:Client)=>(this.x2(d.distance24)))
+      .attr("r", (d:Client)=>(this.ringX(d.distance24)))
       .attr("stroke-opacity",1);
     
-
-    circles.sort((a:Client,b:Client)=>b.distance24-a.distance24);
-
-    //fade out existing circles and remove previous data
+    // Remove obsolete data (fade out corresponding circles)
       circles.exit().transition("time")
       .duration(500)
       .attr("r", 0)
@@ -298,27 +339,20 @@ export class ClientsComponent implements AfterContentInit {
       .remove();
       
   }
-
+  // Method for retrieving (and setting) client colors 
   diagramColor(clientGUID:string){
     var color = "";
-    //assign color to client if no color has been assigned to client
+    // Assign color to client if no color has been assigned to client
     if(!(this.colorMap.has(clientGUID))){
+      // Randomly take a color from the application color palette
       color=environment.palette[Math.floor(Math.random()*environment.palette.length)];
       this.colorMap.set(clientGUID,color);
     }
+    // Return client color
     return this.colorMap.get(clientGUID);
   }
 
-  checkForClient(clientGUID:string){
-    var color = "";
-    this.diagramColors.forEach(element => {
-      if(element[0]==clientGUID){
-        color=element[1];
-      }
-    });
-    return color!==""?true:false;
-  }
-
+  // Group client measurements by MAC (GUID)
   groupByType(array:Client[]){
     return array.reduce((r,a)=>{
       r[a.MAC] = r[a.MAC] || [];
@@ -327,22 +361,29 @@ export class ClientsComponent implements AfterContentInit {
     }, Object.create(null));
   }
 
+  // Clear selectedClients array
   clearSelection(){
     this.selectedClients = [];
   }
 
+  // Select a clientHistory and open the modal with the clientstats-component
   selectClientHistory(sch:any, id:string){
+    // Put the data into a suitable format
     this.selectedClientHistory={
       key:sch.key,
       value:sch.value,
       color:this.diagramColor(sch.key)
     };
+    // Open the modal
     this.openModal(id);
   }
+
+  // Method for opening the modal through the modalService property
   openModal(id: string) {
     this.modalService.open(id);
   }
 
+  // Method for closing modal through the modalService property
   closeModal(id: string) {
       this.modalService.close(id);
   }

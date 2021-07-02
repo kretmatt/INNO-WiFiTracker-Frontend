@@ -1,4 +1,5 @@
 <h2>Time of scan: {{timeOfScan}}</h2>
+<!-- Mat accordion contains network-components for each network currently detected -->
 <mat-accordion>
     <app-network *ngFor="let network of networks; let i=index" [network]="network">
     </app-network>

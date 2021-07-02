@@ -1,40 +1,44 @@
+// Styles for the tooltip
 #tooltip {	
     position: absolute;			
     text-align: center;								
     padding: 2px;				
     font: 16px sans-serif;		
-    background: lightsteelblue;	
     border: 1px;		
     border-radius: 8px;			
     pointer-events: none;
     color:white;			
+    // Use a high value so that the tooltip is in front of other elements
     z-index: 9000;
 }
+// Give container the flex display and present the content in a row
 .container{
     display: flex;
     flex-direction: row;
-
 }
+// Set the "width" of diagrams and clients containers in clients-component
 .diagrams{
     flex-grow: 2;
 }
 .clients{
     flex-grow: 3;
 }
-
+// Style for client history rows
 .clientdistance{
     padding-top: 7px;
     padding-bottom: 7px;
 }
-
+// Basic style for clear button
 .clearbutton{
     float: right;
 }
+// Basic style for details-buttons
 .detailbtn{
     margin-right: 10px;
 }
-
+// Media query for responsive design
 @media(max-width:950px){
+    // If media query is fulfilled, change flex-direction to column and present the content of .container - elements as a stack.
     .container{
         flex-direction: column;
     }

@@ -13,7 +13,7 @@
         <h2>Current clients</h2>
         <mat-divider></mat-divider>
         <mat-accordion>
-            <app-client *ngFor="let client of clients; let i=index" [client]="client">
+            <app-client *ngFor="let client of currentClients; let i=index" [client]="client">
             </app-client>
         </mat-accordion>
         <h2 style="margin-top: 16px;">Client distance histories
@@ -21,7 +21,7 @@
 
         </h2>
         <mat-accordion>
-            <mat-expansion-panel *ngFor="let item of clientHistoryGroupedByMac | keyvalue">
+            <mat-expansion-panel *ngFor="let item of clientHistories | keyvalue">
                 <mat-expansion-panel-header>
                     <mat-panel-title [ngStyle]="{'color':(selectedClients.indexOf(item.key)!==-1)?diagramColor(item.key):'#000000'}">
                       {{item.key}}

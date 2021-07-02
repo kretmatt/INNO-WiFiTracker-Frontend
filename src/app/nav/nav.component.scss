@@ -1,21 +1,23 @@
+// Style for setting the height of the component to available height
 .sidenav-container {
   height: 100%;
 }
-
+// Set width of side-navbar
 .sidenav {
   width: 200px;
 }
-
+// Inherit background 
 .sidenav .mat-toolbar {
   background: inherit;
 }
-
+// Make a sticky navbar
 .mat-toolbar.mat-primary {
   position: sticky;
   top: 0;
   z-index: 9;
 }
 
+// Create a blue marker in front of every mat-list-item in the nav-component, which is inherently hidden. 
 .mat-list-item::before{
   content: '';
   position: absolute;
@@ -28,12 +30,12 @@
   transform: scaleY(0);
   transition: transform 0.2s, opacity 0.2s;
 }
-
+// Visualize currently hovered over navigation item
 .mat-list-item:hover::before{
     opacity: 0.5;
     transform: scaleY(0.66) scaleX(1.15);
 }
-
+// Display blue marker to show current page
 .mat-list-item.is-active::before{
   opacity: 1;
   transform: scaleY(1);

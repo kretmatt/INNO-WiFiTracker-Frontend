@@ -1,49 +1,47 @@
-/* MODAL STYLES
--------------------------------*/
 wt-modal {
-    /* modals are hidden by default */
+    /* Hide modals by default */
     display: none;
 
     .wt-modal {
-        /* modal container fixed across whole screen */
+        /* Fix container across the whole screen */
         position: fixed;
         top: 0;
         right: 0;
         bottom: 0;
         left: 0;
 
-        /* z-index must be higher than .wt-modal-background */
+        /* Set higher z-index than .wt-modal-background to ensure the container is in front of the dark background */
         z-index: 1000;
         
-        /* enables scrolling for tall modals */
+        /* Enable scrolling for tall modals */
         overflow: auto;
 
         .wt-modal-body {
             padding: 20px;
             background: #fff;
-            /* margin exposes part of the modal background */
+            /* Add margin to expose part of modal background */
             margin: 40px;
         }
     }
 
     .wt-modal-background {
-        /* modal background fixed across whole screen */
+        /* Fix modal background across the whole screen */
         position: fixed;
         top: 0;
         right: 0;
         bottom: 0;
         left: 0;
 
-        /* semi-transparent black  */
+        /* Semi-transparent black as background-color */
         background-color: #000;
         opacity: 0.75;
         
-        /* z-index must be below .wt-modal and above everything else  */
+        /* Z-index must be below .wt-modal and above everything else  */
         z-index: 900;
     }
 }
 
 body.wt-modal-open {
-    /* body overflow is hidden to hide main scrollbar when modal window is open */
+    /* Set overflow to hidden to hide main scrollbar when modal is open */
     overflow: hidden;
 }

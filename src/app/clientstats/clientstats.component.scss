@@ -1,7 +1,4 @@
-.mat-grid-tile{
-    border: black 1px;
-    justify-content: flex-start !important;
-}
+// Basic styles for grid-tile content
 .gridcontent{
     position:absolute;
     left: 5px;
@@ -11,6 +8,7 @@
     display: flex;
     flex-flow: column;
 }
+// Basic style for diagram figure elements
 .diagramFigure{
     padding-top:10px ;
     flex-grow: 1;

@@ -9,13 +9,14 @@ import { map, shareReplay } from 'rxjs/operators';
   styleUrls: ['./nav.component.scss']
 })
 export class NavComponent {
-
+  // Observable boolean variable, used to determine if navbar needs to be collapsed
   isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.Handset)
     .pipe(
       map(result => result.matches),
       shareReplay()
     );
 
+  // Inject BreakpointObserver instance for determining state of navbar
   constructor(private breakpointObserver: BreakpointObserver) {}
 
 }
