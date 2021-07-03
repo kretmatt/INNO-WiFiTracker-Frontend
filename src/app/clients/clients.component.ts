@@ -104,7 +104,7 @@ export class ClientsComponent implements AfterContentInit {
                 packets:+c.packets,
                 BSSID:c.BSSID,
                 probes:c.probes,
-                distance24:c.distance_2_4ghz+Math.random()*10,
+                distance24:c.distance_2_4ghz,
                 distance5:c.distance_5ghz,
                 timeOfScan:new Date(data.timeOfScan)
               });
@@ -120,7 +120,7 @@ export class ClientsComponent implements AfterContentInit {
                 packets:+c.packets,
                 BSSID:c.BSSID,
                 probes:c.probes,
-                distance24:c.distance_2_4ghz+Math.random()*10,
+                distance24:c.distance_2_4ghz,
                 distance5:c.distance_5ghz,
                 timeOfScan:new Date(data.timeOfScan)
               });
